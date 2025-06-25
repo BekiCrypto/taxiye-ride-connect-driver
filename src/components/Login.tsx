@@ -34,20 +34,30 @@ const Login = () => {
     // Determine if input is email or phone and format accordingly
     let signInEmail = phoneOrEmail;
     if (!isEmail(phoneOrEmail)) {
-      // Convert phone to email format for login
-      signInEmail = `${phoneOrEmail.replace(/\D/g, '')}@demo.com`;
+      // Convert phone to email format for login (remove any non-digits and add @demo.com)
+      const cleanPhone = phoneOrEmail.replace(/\D/g, '');
+      signInEmail = `${cleanPhone}@demo.com`;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
+    console.log('Attempting sign in with email:', signInEmail);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: signInEmail,
       password
     });
 
     if (error) {
+      console.error('Sign in error:', error);
       toast({
         title: "Sign In Failed",
         description: error.message,
         variant: "destructive"
+      });
+    } else if (data.user) {
+      console.log('Sign in successful:', data.user);
+      toast({
+        title: "Welcome back!",
+        description: "You have been signed in successfully",
       });
     }
     setLoading(false);
@@ -67,33 +77,36 @@ const Login = () => {
     const isEmailInput = isEmail(phoneOrEmail);
     if (!isEmailInput) {
       // Phone number provided - this is the main flow
-      const phone = phoneOrEmail;
-      const signupEmail = `${phone.replace(/\D/g, '')}@demo.com`;
+      const cleanPhone = phoneOrEmail.replace(/\D/g, '');
+      const signupEmail = `${cleanPhone}@demo.com`;
       
       setLoading(true);
       
-      const { error } = await supabase.auth.signUp({
+      console.log('Attempting sign up with email:', signupEmail);
+
+      const { data, error } = await supabase.auth.signUp({
         email: signupEmail,
         password,
         options: {
           data: {
             name,
-            phone
-          },
-          emailRedirectTo: `${window.location.origin}/`
+            phone: phoneOrEmail
+          }
         }
       });
 
       if (error) {
+        console.error('Sign up error:', error);
         toast({
           title: "Sign Up Failed",
           description: error.message,
           variant: "destructive"
         });
-      } else {
+      } else if (data.user) {
+        console.log('Sign up successful:', data.user);
         toast({
           title: "Account Created",
-          description: "Account created successfully with phone number",
+          description: "Account created successfully! You can now sign in.",
         });
       }
       setLoading(false);
@@ -139,32 +152,52 @@ const Login = () => {
 
     setLoading(true);
     
-    const phone = phoneOrEmail;
-    const { error } = await supabase.auth.signUp({
-      email: `${phone.replace(/\D/g, '')}@demo.com`,
-      password: 'demo123456',
+    const cleanPhone = phoneOrEmail.replace(/\D/g, '');
+    const demoEmail = `${cleanPhone}@demo.com`;
+    const demoPassword = 'demo123456';
+
+    console.log('Attempting OTP verification with email:', demoEmail);
+
+    // Try to sign up first, if user exists it will fail and we'll sign in
+    const { error: signUpError } = await supabase.auth.signUp({
+      email: demoEmail,
+      password: demoPassword,
       options: {
         data: {
-          phone: phone,
+          phone: phoneOrEmail,
           name: 'Demo Driver'
-        },
-        emailRedirectTo: `${window.location.origin}/`
+        }
       }
     });
 
-    if (error) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: `${phone.replace(/\D/g, '')}@demo.com`,
-        password: 'demo123456'
+    if (signUpError) {
+      console.log('User might already exist, attempting sign in...');
+      // User might already exist, try to sign in
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: demoEmail,
+        password: demoPassword
       });
       
       if (signInError) {
+        console.error('Sign in after OTP failed:', signInError);
         toast({
           title: "Login Failed",
           description: signInError.message,
           variant: "destructive"
         });
+      } else if (data.user) {
+        console.log('OTP sign in successful:', data.user);
+        toast({
+          title: "Welcome!",
+          description: "You have been signed in successfully",
+        });
       }
+    } else {
+      console.log('OTP sign up successful');
+      toast({
+        title: "Welcome!",
+        description: "Account created and signed in successfully",
+      });
     }
     
     setLoading(false);

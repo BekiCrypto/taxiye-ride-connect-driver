@@ -28,7 +28,15 @@ export const useDriverAuth = () => {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Getting initial session...');
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Error getting session:', error);
+      } else {
+        console.log('Initial session:', !!session?.user);
+      }
+      
       setUser(session?.user ?? null);
       
       if (session?.user) {
@@ -41,6 +49,7 @@ export const useDriverAuth = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, !!session?.user);
       setUser(session?.user ?? null);
       
       if (session?.user) {
@@ -55,6 +64,7 @@ export const useDriverAuth = () => {
   }, []);
 
   const fetchDriverProfile = async (userId: string) => {
+    console.log('Fetching driver profile for user:', userId);
     const { data, error } = await supabase
       .from('drivers')
       .select('*')
@@ -63,7 +73,9 @@ export const useDriverAuth = () => {
 
     if (error) {
       console.error('Error fetching driver profile:', error);
+      setDriver(null);
     } else if (data) {
+      console.log('Driver profile fetched:', data);
       // Cast the data to ensure proper typing
       const driverData: Driver = {
         ...data,
@@ -71,6 +83,9 @@ export const useDriverAuth = () => {
         wallet_balance: Number(data.wallet_balance)
       };
       setDriver(driverData);
+    } else {
+      console.log('No driver profile found');
+      setDriver(null);
     }
   };
 
@@ -103,6 +118,7 @@ export const useDriverAuth = () => {
   };
 
   const signOut = async () => {
+    console.log('Signing out...');
     await supabase.auth.signOut();
   };
 

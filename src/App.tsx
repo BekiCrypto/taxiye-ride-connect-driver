@@ -16,16 +16,20 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   const { user, driver, loading } = useDriverAuth();
 
+  console.log('App state:', { user: !!user, driver: !!driver, loading, driverStatus: driver?.approved_status });
+
   if (loading) {
     return <SplashScreen />;
   }
 
   if (!user) {
+    console.log('No user found, showing login');
     return <Login />;
   }
 
   // If user is authenticated but no driver profile exists or not approved, show KYC
   if (!driver || driver.approved_status === 'pending' || driver.approved_status === 'rejected') {
+    console.log('Driver not approved, showing KYC');
     return (
       <KYCUpload 
         onApproval={() => {
@@ -36,6 +40,7 @@ const AppContent = () => {
     );
   }
 
+  console.log('User and driver approved, showing main app');
   return (
     <BrowserRouter>
       <Routes>
