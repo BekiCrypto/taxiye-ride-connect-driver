@@ -9,7 +9,395 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      documents: {
+        Row: {
+          driver_id: string | null
+          file_url: string | null
+          id: string
+          status: string | null
+          type: string
+          uploaded_at: string | null
+        }
+        Insert: {
+          driver_id?: string | null
+          file_url?: string | null
+          id?: string
+          status?: string | null
+          type: string
+          uploaded_at?: string | null
+        }
+        Update: {
+          driver_id?: string | null
+          file_url?: string | null
+          id?: string
+          status?: string | null
+          type?: string
+          uploaded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drivers: {
+        Row: {
+          approved_status: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_online: boolean | null
+          license_number: string | null
+          name: string
+          phone: string
+          plate_number: string | null
+          updated_at: string | null
+          user_id: string | null
+          vehicle_color: string | null
+          vehicle_model: string | null
+          wallet_balance: number | null
+        }
+        Insert: {
+          approved_status?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_online?: boolean | null
+          license_number?: string | null
+          name: string
+          phone: string
+          plate_number?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          vehicle_color?: string | null
+          vehicle_model?: string | null
+          wallet_balance?: number | null
+        }
+        Update: {
+          approved_status?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_online?: boolean | null
+          license_number?: string | null
+          name?: string
+          phone?: string
+          plate_number?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          vehicle_color?: string | null
+          vehicle_model?: string | null
+          wallet_balance?: number | null
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          driver_id: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          title: string
+          type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          title: string
+          type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          current_uses: number | null
+          driver_bonus: number
+          expiry_date: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          current_uses?: number | null
+          driver_bonus: number
+          expiry_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          current_uses?: number | null
+          driver_bonus?: number
+          expiry_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+        }
+        Relationships: []
+      }
+      promo_redemptions: {
+        Row: {
+          amount_credited: number | null
+          driver_id: string | null
+          id: string
+          promo_code_id: string | null
+          redeemed_at: string | null
+        }
+        Insert: {
+          amount_credited?: number | null
+          driver_id?: string | null
+          id?: string
+          promo_code_id?: string | null
+          redeemed_at?: string | null
+        }
+        Update: {
+          amount_credited?: number | null
+          driver_id?: string | null
+          id?: string
+          promo_code_id?: string | null
+          redeemed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_redemptions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_redemptions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rides: {
+        Row: {
+          commission: number | null
+          completed_at: string | null
+          created_at: string | null
+          distance_km: number | null
+          driver_id: string | null
+          dropoff_location: string
+          fare: number | null
+          id: string
+          net_earnings: number | null
+          passenger_name: string | null
+          passenger_phone: string | null
+          pickup_location: string
+          started_at: string | null
+          status: string | null
+        }
+        Insert: {
+          commission?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          distance_km?: number | null
+          driver_id?: string | null
+          dropoff_location: string
+          fare?: number | null
+          id?: string
+          net_earnings?: number | null
+          passenger_name?: string | null
+          passenger_phone?: string | null
+          pickup_location: string
+          started_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          commission?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          distance_km?: number | null
+          driver_id?: string | null
+          dropoff_location?: string
+          fare?: number | null
+          id?: string
+          net_earnings?: number | null
+          passenger_name?: string | null
+          passenger_phone?: string | null
+          pickup_location?: string
+          started_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rides_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sos_alerts: {
+        Row: {
+          created_at: string | null
+          driver_id: string | null
+          id: string
+          location_lat: number | null
+          location_lng: number | null
+          ride_id: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          ride_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          ride_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sos_alerts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sos_alerts_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          created_at: string | null
+          driver_id: string | null
+          id: string
+          message: string
+          ride_id: string | null
+          status: string | null
+          subject: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          message: string
+          ride_id?: string | null
+          status?: string | null
+          subject: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          message?: string
+          ride_id?: string | null
+          status?: string | null
+          subject?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string | null
+          driver_id: string | null
+          id: string
+          source: string | null
+          status: string | null
+          type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description?: string | null
+          driver_id?: string | null
+          id?: string
+          source?: string | null
+          status?: string | null
+          type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
+          driver_id?: string | null
+          id?: string
+          source?: string | null
+          status?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
