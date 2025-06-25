@@ -8,6 +8,7 @@ import { useDriverAuth } from "@/hooks/useDriverAuth";
 import Index from "./pages/Index";
 import Login from "./components/Login";
 import KYCUpload from "./components/KYCUpload";
+import SplashScreen from "./components/SplashScreen";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -16,11 +17,7 @@ const AppContent = () => {
   const { user, driver, loading } = useDriverAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
+    return <SplashScreen />;
   }
 
   if (!user) {

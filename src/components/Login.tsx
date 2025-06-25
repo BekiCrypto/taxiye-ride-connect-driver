@@ -17,18 +17,28 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
-    if (!email || !password) {
+    const loginField = email || phone;
+    
+    if (!loginField || !password) {
       toast({
         title: "Missing Information",
-        description: "Please enter both email and password",
+        description: "Please enter your email/phone and password",
         variant: "destructive"
       });
       return;
     }
 
     setLoading(true);
+    
+    // Try to sign in with email first, then phone-based email
+    let signInEmail = email;
+    if (!email && phone) {
+      // Convert phone to email format for login
+      signInEmail = `${phone.replace(/\D/g, '')}@demo.com`;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: signInEmail,
       password
     });
 
@@ -43,18 +53,22 @@ const Login = () => {
   };
 
   const handleSignUp = async () => {
-    if (!email || !password || !name || !phone) {
+    if (!phone || !password || !name) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all fields",
+        description: "Please fill in phone number, name, and password (email is optional)",
         variant: "destructive"
       });
       return;
     }
 
     setLoading(true);
+    
+    // Use email if provided, otherwise create one from phone
+    const signupEmail = email || `${phone.replace(/\D/g, '')}@demo.com`;
+    
     const { error } = await supabase.auth.signUp({
-      email,
+      email: signupEmail,
       password,
       options: {
         data: {
@@ -74,7 +88,7 @@ const Login = () => {
     } else {
       toast({
         title: "Account Created",
-        description: "Please check your email to verify your account",
+        description: email ? "Please check your email to verify your account" : "Account created successfully",
       });
     }
     setLoading(false);
@@ -84,8 +98,6 @@ const Login = () => {
     if (!phone) return;
     
     setLoading(true);
-    // For demo purposes, we'll skip real OTP and just simulate the flow
-    // In production, you'd integrate with a real SMS service
     setStep('otp');
     setLoading(false);
     
@@ -107,9 +119,8 @@ const Login = () => {
 
     setLoading(true);
     
-    // For demo, create a test user with the phone number
     const { error } = await supabase.auth.signUp({
-      email: `${phone.replace(/\D/g, '')}@demo.com`, // Convert phone to email format for demo
+      email: `${phone.replace(/\D/g, '')}@demo.com`,
       password: 'demo123456',
       options: {
         data: {
@@ -121,7 +132,6 @@ const Login = () => {
     });
 
     if (error) {
-      // If user already exists, try to sign in
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: `${phone.replace(/\D/g, '')}@demo.com`,
         password: 'demo123456'
@@ -186,7 +196,7 @@ const Login = () => {
               {mode === 'signup' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Full Name
+                    Full Name *
                   </label>
                   <Input
                     type="text"
@@ -194,28 +204,28 @@ const Login = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="bg-gray-700 border-gray-600 text-white"
-                  />
-                </div>
-              )}
-
-              {mode === 'signup' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Phone Number
-                  </label>
-                  <Input
-                    type="tel"
-                    placeholder="+251911123456"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="bg-gray-700 border-gray-600 text-white"
+                    required
                   />
                 </div>
               )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Email Address
+                  Phone Number {mode === 'signup' ? '*' : ''}
+                </label>
+                <Input
+                  type="tel"
+                  placeholder="+251911123456"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  required={mode === 'signup'}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Email Address {mode === 'signup' ? '(Optional)' : ''}
                 </label>
                 <Input
                   type="email"
@@ -228,7 +238,7 @@ const Login = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Password
+                  Password *
                 </label>
                 <Input
                   type="password"
@@ -236,6 +246,7 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-gray-700 border-gray-600 text-white"
+                  required
                 />
               </div>
 
@@ -258,6 +269,12 @@ const Login = () => {
                   {loading ? 'Sending...' : 'Send OTP to Phone'}
                 </Button>
               </div>
+
+              {mode === 'signin' && (
+                <p className="text-sm text-gray-400 text-center">
+                  You can sign in with either your email or phone number
+                </p>
+              )}
             </>
           ) : (
             <>
