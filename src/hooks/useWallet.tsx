@@ -37,8 +37,16 @@ export const useWallet = () => {
 
     if (error) {
       console.error('Error fetching transactions:', error);
-    } else {
-      setTransactions(data || []);
+    } else if (data) {
+      // Cast the data to ensure proper typing
+      const transactionsData: WalletTransaction[] = data.map(transaction => ({
+        ...transaction,
+        type: transaction.type as 'topup' | 'commission' | 'promo_credit' | 'admin_credit' | 'ride_earning',
+        source: transaction.source as 'telebirr' | 'stripe' | 'bank' | 'admin' | 'ride' | undefined,
+        status: transaction.status as 'pending' | 'completed' | 'failed',
+        amount: Number(transaction.amount)
+      }));
+      setTransactions(transactionsData);
     }
     setLoading(false);
   };

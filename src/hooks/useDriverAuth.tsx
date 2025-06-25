@@ -63,8 +63,14 @@ export const useDriverAuth = () => {
 
     if (error) {
       console.error('Error fetching driver profile:', error);
-    } else {
-      setDriver(data);
+    } else if (data) {
+      // Cast the data to ensure proper typing
+      const driverData: Driver = {
+        ...data,
+        approved_status: data.approved_status as 'pending' | 'approved' | 'rejected',
+        wallet_balance: Number(data.wallet_balance)
+      };
+      setDriver(driverData);
     }
   };
 
@@ -83,8 +89,17 @@ export const useDriverAuth = () => {
       return null;
     }
 
-    setDriver(data);
-    return data;
+    if (data) {
+      const updatedDriver: Driver = {
+        ...data,
+        approved_status: data.approved_status as 'pending' | 'approved' | 'rejected',
+        wallet_balance: Number(data.wallet_balance)
+      };
+      setDriver(updatedDriver);
+      return updatedDriver;
+    }
+
+    return null;
   };
 
   const signOut = async () => {

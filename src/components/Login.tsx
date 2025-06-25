@@ -3,26 +3,71 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
-interface LoginProps {
-  onLogin: () => void;
-}
-
-const Login = ({ onLogin }: LoginProps) => {
+const Login = () => {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [loading, setLoading] = useState(false);
 
-  const handleSendOTP = () => {
-    if (phone) {
-      setStep('otp');
-    }
+  const handleSendOTP = async () => {
+    if (!phone) return;
+    
+    setLoading(true);
+    // For demo purposes, we'll skip real OTP and just simulate the flow
+    // In production, you'd integrate with a real SMS service
+    setStep('otp');
+    setLoading(false);
+    
+    toast({
+      title: "OTP Sent",
+      description: "Use 1234 as the OTP for demo purposes",
+    });
   };
 
-  const handleVerifyOTP = () => {
-    if (otp === '1234') { // Simulate OTP verification
-      onLogin();
+  const handleVerifyOTP = async () => {
+    if (otp !== '1234') {
+      toast({
+        title: "Invalid OTP",
+        description: "Please enter the correct OTP",
+        variant: "destructive"
+      });
+      return;
     }
+
+    setLoading(true);
+    
+    // For demo, create a test user with the phone number
+    const { error } = await supabase.auth.signUp({
+      email: `${phone.replace(/\D/g, '')}@demo.com`, // Convert phone to email format for demo
+      password: 'demo123456',
+      options: {
+        data: {
+          phone: phone,
+          name: 'Demo Driver'
+        }
+      }
+    });
+
+    if (error) {
+      // If user already exists, try to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: `${phone.replace(/\D/g, '')}@demo.com`,
+        password: 'demo123456'
+      });
+      
+      if (signInError) {
+        toast({
+          title: "Login Failed",
+          description: signInError.message,
+          variant: "destructive"
+        });
+      }
+    }
+    
+    setLoading(false);
   };
 
   return (
@@ -53,9 +98,9 @@ const Login = ({ onLogin }: LoginProps) => {
               <Button 
                 onClick={handleSendOTP}
                 className="w-full bg-green-600 hover:bg-green-700"
-                disabled={!phone}
+                disabled={!phone || loading}
               >
-                Send OTP
+                {loading ? 'Sending...' : 'Send OTP'}
               </Button>
             </>
           ) : (
@@ -72,18 +117,20 @@ const Login = ({ onLogin }: LoginProps) => {
                   className="bg-gray-700 border-gray-600 text-white text-center text-2xl"
                   maxLength={4}
                 />
+                <p className="text-sm text-gray-400 mt-2">Demo OTP: 1234</p>
               </div>
               <Button 
                 onClick={handleVerifyOTP}
                 className="w-full bg-green-600 hover:bg-green-700"
-                disabled={!otp}
+                disabled={!otp || loading}
               >
-                Verify & Login
+                {loading ? 'Verifying...' : 'Verify & Login'}
               </Button>
               <Button 
                 variant="ghost"
                 onClick={() => setStep('phone')}
                 className="w-full text-gray-400"
+                disabled={loading}
               >
                 Change Phone Number
               </Button>

@@ -44,9 +44,19 @@ export const useRides = () => {
 
     if (error) {
       console.error('Error fetching rides:', error);
-    } else {
-      setRides(data || []);
-      const activeRide = data?.find(ride => 
+    } else if (data) {
+      // Cast the data to ensure proper typing
+      const ridesData: Ride[] = data.map(ride => ({
+        ...ride,
+        status: ride.status as 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled',
+        fare: ride.fare ? Number(ride.fare) : undefined,
+        commission: ride.commission ? Number(ride.commission) : undefined,
+        net_earnings: ride.net_earnings ? Number(ride.net_earnings) : undefined,
+        distance_km: ride.distance_km ? Number(ride.distance_km) : undefined
+      }));
+      
+      setRides(ridesData);
+      const activeRide = ridesData.find(ride => 
         ride.status === 'accepted' || ride.status === 'in_progress'
       );
       setCurrentRide(activeRide || null);
