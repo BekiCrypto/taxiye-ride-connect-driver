@@ -3,123 +3,138 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Clock, MapPin, DollarSign } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Star, AlertTriangle } from 'lucide-react';
 
 const TripSummary = () => {
   const navigate = useNavigate();
 
   const tripData = {
-    fare: 125.50,
-    commission: 25.10,
-    netEarning: 100.40,
-    distance: '5.2 km',
-    duration: '18 mins',
-    passengerName: 'Sarah Tadesse',
-    rating: 5
+    passenger: 'Sarah Tekle',
+    pickup: 'Bole Atlas Hotel',
+    dropoff: 'Addis Ababa University',
+    distance: '8.5 km',
+    duration: '18 minutes',
+    grossFare: 180.00,
+    commission: 18.00,
+    netEarnings: 162.00,
+    date: new Date().toLocaleDateString(),
+    time: new Date().toLocaleTimeString()
   };
 
-  const handleContinue = () => {
+  const handleDone = () => {
     navigate('/');
   };
 
+  const handleFlagTrip = () => {
+    // Handle trip flagging for review
+    console.log('Trip flagged for review');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 p-4 flex items-center justify-center">
-      <div className="w-full max-w-md space-y-6">
-        {/* Success Header */}
-        <Card className="bg-green-800 border-green-600">
-          <CardContent className="p-6 text-center">
-            <CheckCircle className="h-16 w-16 text-white mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-2">Trip Completed!</h1>
-            <p className="text-green-100">Great job completing this ride</p>
-          </CardContent>
-        </Card>
-
-        {/* Trip Details */}
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white">Trip Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Passenger */}
-            <div className="flex items-center justify-between py-2 border-b border-gray-700">
-              <span className="text-gray-400">Passenger</span>
-              <span className="text-white font-medium">{tripData.passengerName}</span>
-            </div>
-
-            {/* Trip Stats */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-700 rounded-lg p-3 text-center">
-                <MapPin className="h-5 w-5 text-blue-400 mx-auto mb-1" />
-                <div className="text-xs text-gray-400">Distance</div>
-                <div className="text-white font-medium">{tripData.distance}</div>
-              </div>
-              <div className="bg-gray-700 rounded-lg p-3 text-center">
-                <Clock className="h-5 w-5 text-purple-400 mx-auto mb-1" />
-                <div className="text-xs text-gray-400">Duration</div>
-                <div className="text-white font-medium">{tripData.duration}</div>
-              </div>
-            </div>
-
-            {/* Rating */}
-            <div className="flex items-center justify-between py-2 border-b border-gray-700">
-              <span className="text-gray-400">Passenger Rating</span>
-              <div className="flex items-center space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <span 
-                    key={i} 
-                    className={`text-lg ${i < tripData.rating ? 'text-yellow-400' : 'text-gray-600'}`}
-                  >
-                    ★
-                  </span>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Earnings Breakdown */}
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <DollarSign className="h-5 w-5 mr-2" />
-              Earnings Breakdown
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-400">Trip Fare</span>
-              <span className="text-white font-medium">{tripData.fare.toFixed(2)} ETB</span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-400">Platform Commission (20%)</span>
-              <span className="text-red-400 font-medium">-{tripData.commission.toFixed(2)} ETB</span>
-            </div>
-            <div className="border-t border-gray-700 pt-3">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold text-white">Your Earnings</span>
-                <span className="text-2xl font-bold text-green-400">
-                  {tripData.netEarning.toFixed(2)} ETB
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Action Buttons */}
-        <div className="space-y-3">
-          <Button 
-            onClick={handleContinue}
-            className="w-full h-14 bg-green-600 hover:bg-green-700"
-          >
-            Continue Driving
-          </Button>
-          <Button 
-            variant="outline"
-            className="w-full border-gray-600 text-white hover:bg-gray-700"
-          >
-            Report Issue
-          </Button>
+    <div className="min-h-screen bg-gray-900 p-4 space-y-6">
+      <div className="text-center">
+        <div className="mx-auto w-20 h-20 bg-green-600 rounded-full flex items-center justify-center mb-4">
+          <DollarSign className="h-10 w-10 text-white" />
         </div>
+        <h1 className="text-2xl font-bold text-white">Trip Completed!</h1>
+        <p className="text-gray-400">Great job completing another ride</p>
+      </div>
+
+      <Card className="bg-gray-800 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-white">Trip Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex justify-between">
+            <span className="text-gray-400">Passenger</span>
+            <span className="text-white">{tripData.passenger}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Date & Time</span>
+            <span className="text-white">{tripData.date} at {tripData.time}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Distance</span>
+            <span className="text-white">{tripData.distance}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Duration</span>
+            <span className="text-white">{tripData.duration}</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-gray-800 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-white">Route</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center space-x-3">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span className="text-white">{tripData.pickup}</span>
+          </div>
+          <div className="ml-4 border-l-2 border-gray-600 h-6"></div>
+          <div className="flex items-center space-x-3">
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <span className="text-white">{tripData.dropoff}</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-gradient-to-r from-green-800 to-green-600 border-green-500">
+        <CardHeader>
+          <CardTitle className="text-white">Earnings Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex justify-between">
+            <span className="text-green-100">Gross Fare</span>
+            <span className="text-white font-semibold">{tripData.grossFare.toFixed(2)} ETB</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-green-100">Commission (10%)</span>
+            <span className="text-red-200">-{tripData.commission.toFixed(2)} ETB</span>
+          </div>
+          <div className="border-t border-green-400 pt-2">
+            <div className="flex justify-between">
+              <span className="text-white font-semibold">Net Earnings</span>
+              <span className="text-white font-bold text-xl">{tripData.netEarnings.toFixed(2)} ETB</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-gray-800 border-gray-700">
+        <CardContent className="p-4">
+          <div className="text-center">
+            <div className="text-white mb-2">Rate this trip</div>
+            <div className="flex justify-center space-x-2 mb-4">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  className="h-8 w-8 text-yellow-400 fill-current cursor-pointer hover:scale-110"
+                />
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-3">
+        <Button
+          onClick={handleDone}
+          className="w-full h-12 bg-green-600 hover:bg-green-700 text-lg font-semibold"
+        >
+          Done
+        </Button>
+        
+        <Button
+          onClick={handleFlagTrip}
+          variant="outline"
+          className="w-full border-red-600 text-red-400 hover:bg-red-900"
+        >
+          <AlertTriangle className="h-4 w-4 mr-2" />
+          Flag Trip for Review
+        </Button>
       </div>
     </div>
   );
