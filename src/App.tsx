@@ -7,12 +7,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useDriverAuth } from "@/hooks/useDriverAuth";
 import Index from "./pages/Index";
 import Login from "./components/Login";
+import KYCUpload from "./components/KYCUpload";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  const { user, loading } = useDriverAuth();
+  const { user, driver, loading } = useDriverAuth();
 
   if (loading) {
     return (
@@ -24,6 +25,18 @@ const AppContent = () => {
 
   if (!user) {
     return <Login />;
+  }
+
+  // If user is authenticated but no driver profile exists or not approved, show KYC
+  if (!driver || driver.approved_status === 'pending' || driver.approved_status === 'rejected') {
+    return (
+      <KYCUpload 
+        onApproval={() => {
+          // This will be handled by the database trigger and auth state change
+          console.log('KYC approval completed');
+        }} 
+      />
+    );
   }
 
   return (
