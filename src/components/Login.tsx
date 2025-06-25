@@ -7,8 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 
 const Login = () => {
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
+  const [phoneOrEmail, setPhoneOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [otp, setOtp] = useState('');
@@ -16,13 +15,15 @@ const Login = () => {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [loading, setLoading] = useState(false);
 
+  const isEmail = (value: string) => {
+    return value.includes('@') && value.includes('.');
+  };
+
   const handleSignIn = async () => {
-    const loginField = email || phone;
-    
-    if (!loginField || !password) {
+    if (!phoneOrEmail || !password) {
       toast({
         title: "Missing Information",
-        description: "Please enter your email/phone and password",
+        description: "Please enter your phone/email and password",
         variant: "destructive"
       });
       return;
@@ -30,11 +31,11 @@ const Login = () => {
 
     setLoading(true);
     
-    // Try to sign in with email first, then phone-based email
-    let signInEmail = email;
-    if (!email && phone) {
+    // Determine if input is email or phone and format accordingly
+    let signInEmail = phoneOrEmail;
+    if (!isEmail(phoneOrEmail)) {
       // Convert phone to email format for login
-      signInEmail = `${phone.replace(/\D/g, '')}@demo.com`;
+      signInEmail = `${phoneOrEmail.replace(/\D/g, '')}@demo.com`;
     }
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -53,49 +54,68 @@ const Login = () => {
   };
 
   const handleSignUp = async () => {
-    if (!phone || !password || !name) {
+    if (!phoneOrEmail || !password || !name) {
       toast({
         title: "Missing Information",
-        description: "Please fill in phone number, name, and password (email is optional)",
+        description: "Please fill in phone/email, name, and password",
         variant: "destructive"
       });
       return;
     }
 
-    setLoading(true);
-    
-    // Use email if provided, otherwise create one from phone
-    const signupEmail = email || `${phone.replace(/\D/g, '')}@demo.com`;
-    
-    const { error } = await supabase.auth.signUp({
-      email: signupEmail,
-      password,
-      options: {
-        data: {
-          name,
-          phone
-        },
-        emailRedirectTo: `${window.location.origin}/`
-      }
-    });
+    // For signup, phone is mandatory, email is optional
+    const isEmailInput = isEmail(phoneOrEmail);
+    if (!isEmailInput) {
+      // Phone number provided - this is the main flow
+      const phone = phoneOrEmail;
+      const signupEmail = `${phone.replace(/\D/g, '')}@demo.com`;
+      
+      setLoading(true);
+      
+      const { error } = await supabase.auth.signUp({
+        email: signupEmail,
+        password,
+        options: {
+          data: {
+            name,
+            phone
+          },
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
 
-    if (error) {
+      if (error) {
+        toast({
+          title: "Sign Up Failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Account Created",
+          description: "Account created successfully with phone number",
+        });
+      }
+      setLoading(false);
+    } else {
+      // Email provided - optional flow
       toast({
-        title: "Sign Up Failed",
-        description: error.message,
+        title: "Phone Required",
+        description: "Please provide a phone number for driver registration",
         variant: "destructive"
       });
-    } else {
-      toast({
-        title: "Account Created",
-        description: email ? "Please check your email to verify your account" : "Account created successfully",
-      });
     }
-    setLoading(false);
   };
 
   const handleSendOTP = async () => {
-    if (!phone) return;
+    if (!phoneOrEmail || isEmail(phoneOrEmail)) {
+      toast({
+        title: "Phone Required",
+        description: "Please enter a phone number to receive OTP",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setLoading(true);
     setStep('otp');
@@ -119,6 +139,7 @@ const Login = () => {
 
     setLoading(true);
     
+    const phone = phoneOrEmail;
     const { error } = await supabase.auth.signUp({
       email: `${phone.replace(/\D/g, '')}@demo.com`,
       password: 'demo123456',
@@ -211,29 +232,21 @@ const Login = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Phone Number {mode === 'signup' ? '*' : ''}
+                  {mode === 'signup' ? 'Phone Number *' : 'Phone Number or Email'}
                 </label>
                 <Input
-                  type="tel"
-                  placeholder="+251911123456"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  type="text"
+                  placeholder={mode === 'signup' ? "+251911123456" : "Phone number or email"}
+                  value={phoneOrEmail}
+                  onChange={(e) => setPhoneOrEmail(e.target.value)}
                   className="bg-gray-700 border-gray-600 text-white"
-                  required={mode === 'signup'}
+                  required
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Email Address {mode === 'signup' ? '(Optional)' : ''}
-                </label>
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
+                {mode === 'signup' && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Phone number is required for driver registration
+                  </p>
+                )}
               </div>
 
               <div>
@@ -264,7 +277,7 @@ const Login = () => {
                   variant="outline"
                   onClick={handleSendOTP}
                   className="w-full border-gray-600 text-white hover:bg-gray-700"
-                  disabled={!phone || loading}
+                  disabled={!phoneOrEmail || isEmail(phoneOrEmail) || loading}
                 >
                   {loading ? 'Sending...' : 'Send OTP to Phone'}
                 </Button>
@@ -272,7 +285,7 @@ const Login = () => {
 
               {mode === 'signin' && (
                 <p className="text-sm text-gray-400 text-center">
-                  You can sign in with either your email or phone number
+                  You can sign in with either your phone number or email address
                 </p>
               )}
             </>
@@ -280,7 +293,7 @@ const Login = () => {
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Enter OTP sent to {phone}
+                  Enter OTP sent to {phoneOrEmail}
                 </label>
                 <Input
                   type="text"
