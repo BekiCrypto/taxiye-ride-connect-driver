@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,7 +54,14 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
     
     // Handle components that need props
     if (selectedComponent === 'dashboard') {
-      return <Component onNavigate={(page: string) => setSelectedComponent(page)} />;
+      return <Component onNavigate={(page: string) => {
+        console.log('Navigation attempt to:', page);
+        // In admin preview, we can switch to the requested component
+        const targetComponent = components.find(c => c.name.toLowerCase().includes(page.toLowerCase()));
+        if (targetComponent) {
+          setSelectedComponent(targetComponent.id);
+        }
+      }} />;
     }
     
     return <Component />;
