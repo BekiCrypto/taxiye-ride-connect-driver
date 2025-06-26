@@ -88,6 +88,7 @@ const Login = () => {
         email: signupEmail,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             name,
             phone: phoneOrEmail
@@ -158,45 +159,83 @@ const Login = () => {
 
     console.log('Attempting OTP verification with email:', demoEmail);
 
-    // Try to sign up first, if user exists it will fail and we'll sign in
-    const { error: signUpError } = await supabase.auth.signUp({
+    // Try to sign in first, if user doesn't exist create them
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: demoEmail,
-      password: demoPassword,
+      password: demoPassword
+    });
+
+    if (signInError) {
+      console.log('User does not exist, creating new user...');
+      // User doesn't exist, create them
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: demoEmail,
+        password: demoPassword,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            phone: phoneOrEmail,
+            name: 'Demo Driver'
+          }
+        }
+      });
+      
+      if (signUpError) {
+        console.error('Sign up after OTP failed:', signUpError);
+        toast({
+          title: "Registration Failed",
+          description: signUpError.message,
+          variant: "destructive"
+        });
+      } else if (signUpData.user) {
+        console.log('OTP sign up successful:', signUpData.user);
+        toast({
+          title: "Welcome!",
+          description: "Account created successfully",
+        });
+      }
+    } else if (signInData.user) {
+      console.log('OTP sign in successful:', signInData.user);
+      toast({
+        title: "Welcome back!",
+        description: "You have been signed in successfully",
+      });
+    }
+    
+    setLoading(false);
+  };
+
+  const createTestUser = async () => {
+    setLoading(true);
+    console.log('Creating test user...');
+    
+    const testEmail = '911300466@demo.com';
+    const testPassword = 'demo123456';
+    
+    const { data, error } = await supabase.auth.signUp({
+      email: testEmail,
+      password: testPassword,
       options: {
+        emailRedirectTo: `${window.location.origin}/`,
         data: {
-          phone: phoneOrEmail,
-          name: 'Demo Driver'
+          name: 'Test Driver',
+          phone: '+251911300466'
         }
       }
     });
 
-    if (signUpError) {
-      console.log('User might already exist, attempting sign in...');
-      // User might already exist, try to sign in
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: demoEmail,
-        password: demoPassword
-      });
-      
-      if (signInError) {
-        console.error('Sign in after OTP failed:', signInError);
-        toast({
-          title: "Login Failed",
-          description: signInError.message,
-          variant: "destructive"
-        });
-      } else if (data.user) {
-        console.log('OTP sign in successful:', data.user);
-        toast({
-          title: "Welcome!",
-          description: "You have been signed in successfully",
-        });
-      }
-    } else {
-      console.log('OTP sign up successful');
+    if (error) {
+      console.error('Test user creation error:', error);
       toast({
-        title: "Welcome!",
-        description: "Account created and signed in successfully",
+        title: "Test User Creation Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      console.log('Test user created successfully');
+      toast({
+        title: "Test User Created",
+        description: "Test credentials are now ready. Try signing in with phone: 911300466 and password: demo123456",
       });
     }
     
@@ -265,21 +304,16 @@ const Login = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  {mode === 'signup' ? 'Phone Number *' : 'Phone Number or Email'}
+                  Phone Number or Email
                 </label>
                 <Input
                   type="text"
-                  placeholder={mode === 'signup' ? "+251911123456" : "Phone number or email"}
+                  placeholder="Enter phone number or email"
                   value={phoneOrEmail}
                   onChange={(e) => setPhoneOrEmail(e.target.value)}
                   className="bg-gray-700 border-gray-600 text-white"
                   required
                 />
-                {mode === 'signup' && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    Phone number is required for driver registration
-                  </p>
-                )}
               </div>
 
               <div>
@@ -316,11 +350,20 @@ const Login = () => {
                 </Button>
               </div>
 
-              {mode === 'signin' && (
-                <p className="text-sm text-gray-400 text-center">
-                  You can sign in with either your phone number or email address
-                </p>
-              )}
+              {/* Test credentials helper */}
+              <div className="text-center border-t border-gray-600 pt-4">
+                <div className="text-xs text-gray-400 mb-2">
+                  Test Credentials: Phone: 911300466, Password: demo123456
+                </div>
+                <Button 
+                  variant="ghost"
+                  onClick={createTestUser}
+                  className="text-xs text-gray-400 hover:text-white"
+                  disabled={loading}
+                >
+                  Create Test User (if needed)
+                </Button>
+              </div>
             </>
           ) : (
             <>
