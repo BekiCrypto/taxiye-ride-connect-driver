@@ -11,6 +11,9 @@ import RideRequest from '../components/RideRequest';
 import ActiveTrip from '../components/ActiveTrip';
 import TripSummary from '../components/TripSummary';
 import SOSEmergency from '../components/SOSEmergency';
+import Notifications from '../components/Notifications';
+import Referral from '../components/Referral';
+import EarningsHistory from '../components/EarningsHistory';
 
 const Index = () => {
   return (
@@ -20,6 +23,9 @@ const Index = () => {
         <Route path="/wallet" element={<Wallet />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/support" element={<Support />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/referral" element={<Referral />} />
+        <Route path="/earnings" element={<EarningsHistory />} />
         <Route path="/ride-request" element={<RideRequest />} />
         <Route path="/active-trip" element={<ActiveTrip />} />
         <Route path="/trip-summary" element={<TripSummary />} />
