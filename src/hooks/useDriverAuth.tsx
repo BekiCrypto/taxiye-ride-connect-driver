@@ -29,24 +29,38 @@ export const useDriverAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     // Get initial session
     const getInitialSession = async () => {
       console.log('Getting initial session...');
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Error getting session:', error);
-        setLoading(false);
-        return;
-      }
-      
-      console.log('Initial session:', !!session?.user);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await fetchDriverProfile(session.user.id);
-      } else {
-        setLoading(false);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          if (isMounted) {
+            setLoading(false);
+          }
+          return;
+        }
+        
+        console.log('Initial session:', !!session?.user);
+        
+        if (isMounted) {
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            await fetchDriverProfile(session.user.id);
+          } else {
+            setLoading(false);
+          }
+        }
+      } catch (err) {
+        console.error('Unexpected error getting session:', err);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -55,17 +69,23 @@ export const useDriverAuth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, !!session?.user);
-      setUser(session?.user ?? null);
       
-      if (session?.user) {
-        await fetchDriverProfile(session.user.id);
-      } else {
-        setDriver(null);
-        setLoading(false);
+      if (isMounted) {
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await fetchDriverProfile(session.user.id);
+        } else {
+          setDriver(null);
+          setLoading(false);
+        }
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchDriverProfile = async (userId: string) => {
@@ -76,17 +96,17 @@ export const useDriverAuth = () => {
         .from('drivers')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no data
 
       if (error) {
         console.error('Error fetching driver profile:', error);
-        if (error.code === 'PGRST116') {
-          console.log('No driver profile found for user:', userId);
-        }
         setDriver(null);
-      } else if (data) {
+        setLoading(false);
+        return;
+      }
+
+      if (data) {
         console.log('Driver profile fetched:', data);
-        // Create driver object with proper typing
         const driverData: Driver = {
           phone: data.phone,
           user_id: data.user_id,
@@ -108,7 +128,7 @@ export const useDriverAuth = () => {
         };
         setDriver(driverData);
       } else {
-        console.log('No driver profile data returned');
+        console.log('No driver profile found for user:', userId);
         setDriver(null);
       }
     } catch (err) {
