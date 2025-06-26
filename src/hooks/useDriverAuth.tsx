@@ -81,7 +81,7 @@ export const useDriverAuth = () => {
       console.log('Starting to fetch driver profile for:', userId);
       const driverData = await fetchDriverProfile(userId);
       console.log('Driver profile fetch result:', driverData);
-      setDriver(driverData);
+      setDriver(driverData); // This will be null if no profile exists
     } catch (err) {
       console.error('Error in handleFetchDriverProfile:', err);
       setDriver(null);
