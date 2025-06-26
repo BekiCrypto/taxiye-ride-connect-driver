@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, CheckCircle, Camera, LogOut, Home, Sparkles, Eye, AlertTriangle, Clock } from 'lucide-react';
+import { Upload, FileText, CheckCircle, Camera, LogOut, Home, Sparkles, Eye, AlertTriangle, Clock, Send } from 'lucide-react';
 import { useDriverAuth } from '@/hooks/useDriverAuth';
 import { useDocumentUpload } from '@/hooks/useDocumentUpload';
 import { useAIVerification } from '@/hooks/useAIVerification';
@@ -23,6 +23,7 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
   const [currentUploadType, setCurrentUploadType] = useState<string>('');
   const [showCamera, setShowCamera] = useState(false);
   const [showAIVerification, setShowAIVerification] = useState(false);
+  const [submittingForReview, setSubmittingForReview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -139,6 +140,28 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
     if (result?.success && result?.autoApproved) {
       setTimeout(() => onApproval(), 2000);
     }
+  };
+
+  const handleSubmitForApproval = async () => {
+    if (!allDocsUploaded) {
+      toast({
+        title: "Upload Required",
+        description: "Please upload all required documents first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSubmittingForReview(true);
+    const success = await submitForManualReview();
+    
+    if (success) {
+      toast({
+        title: "Documents Submitted! 📋",
+        description: "Your documents have been submitted for review. You'll be notified within 24-48 hours.",
+      });
+    }
+    setSubmittingForReview(false);
   };
 
   useEffect(() => {
@@ -374,7 +397,7 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
 
           <Alert className="bg-blue-900 border-blue-700">
             <AlertDescription className="text-blue-200">
-              Upload all required documents to enable AI-assisted verification for faster processing.
+              Upload all required documents to submit for approval or try AI-assisted verification for faster processing.
             </AlertDescription>
           </Alert>
 
@@ -434,28 +457,22 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
               </Alert>
 
               <Button
-                onClick={handleAIVerification}
-                disabled={verifying}
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                onClick={handleSubmitForApproval}
+                disabled={submittingForReview}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
-                <Sparkles className="h-4 w-4 mr-2" />
-                {verifying ? 'AI Verifying...' : 'AI-Assisted Verification (Instant)'}
+                <Send className="h-4 w-4 mr-2" />
+                {submittingForReview ? 'Submitting...' : 'Submit for Approval (24-48 hours)'}
               </Button>
 
               <Button
-                onClick={async () => {
-                  const success = await submitForManualReview();
-                  if (success) {
-                    toast({
-                      title: "Submitted for Review",
-                      description: "Your documents will be reviewed within 24-48 hours",
-                    });
-                  }
-                }}
+                onClick={handleAIVerification}
+                disabled={verifying}
                 variant="outline"
-                className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+                className="w-full border-purple-600 text-purple-300 hover:bg-purple-900/20"
               >
-                Manual Review (24-48 hours)
+                <Sparkles className="h-4 w-4 mr-2" />
+                {verifying ? 'AI Verifying...' : 'Try AI-Assisted Verification (Instant)'}
               </Button>
             </div>
           )}
