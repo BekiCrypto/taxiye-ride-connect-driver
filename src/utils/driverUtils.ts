@@ -3,7 +3,7 @@ import { Driver } from '@/types/driver';
 
 export const mapDriverData = (data: any): Driver => {
   return {
-    phone: data.phone,
+    phone: data.phone, // This will now include the DRV_ prefix if needed
     user_id: data.user_id,
     name: data.name,
     email: data.email,
@@ -21,4 +21,25 @@ export const mapDriverData = (data: any): Driver => {
     last_reviewed_at: data.last_reviewed_at,
     reviewed_by: data.reviewed_by
   };
+};
+
+// Helper function to extract clean phone number for display
+export const getDisplayPhone = (phone: string): string => {
+  if (phone.startsWith('DRV_')) {
+    return phone.substring(4);
+  }
+  if (phone.startsWith('PSG_')) {
+    return phone.substring(4);
+  }
+  return phone;
+};
+
+// Helper function to check if phone is a driver phone
+export const isDriverPhone = (phone: string): boolean => {
+  return phone.startsWith('DRV_');
+};
+
+// Helper function to check if phone is a passenger phone
+export const isPassengerPhone = (phone: string): boolean => {
+  return phone.startsWith('PSG_');
 };

@@ -36,6 +36,12 @@ export const useAuthHandlers = () => {
     });
   };
 
+  // Helper function to get the driver-specific auth email
+  const getDriverAuthEmail = (phone: string) => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    return `${cleanPhone}@driver.taxiye.com`;
+  };
+
   const handleSignIn = async (phone: string, password: string) => {
     if (!phone || !password) {
       toast({
@@ -57,8 +63,7 @@ export const useAuthHandlers = () => {
 
     setLoading(true);
     
-    const cleanPhone = phone.replace(/\D/g, '');
-    const authEmail = `${cleanPhone}@driver.taxiye.com`;
+    const authEmail = getDriverAuthEmail(phone);
 
     console.log('Attempting sign in with phone:', phone);
 
@@ -114,8 +119,7 @@ export const useAuthHandlers = () => {
 
     setLoading(true);
     
-    const cleanPhone = phone.replace(/\D/g, '');
-    const authEmail = `${cleanPhone}@driver.taxiye.com`;
+    const authEmail = getDriverAuthEmail(phone);
     
     console.log('Attempting sign up with phone as primary key:', phone);
 
@@ -128,7 +132,7 @@ export const useAuthHandlers = () => {
           name,
           phone: phone,
           email: email || null,
-          user_type: 'driver'
+          user_type: 'driver' // This is crucial for the trigger to work
         }
       }
     });
@@ -219,8 +223,7 @@ export const useAuthHandlers = () => {
 
     setLoading(true);
     
-    const cleanPhone = phone.replace(/\D/g, '');
-    const authEmail = `${cleanPhone}@driver.taxiye.com`;
+    const authEmail = getDriverAuthEmail(phone);
     const defaultPassword = 'taxiye123456';
 
     console.log('Attempting OTP verification for phone:', phone);
@@ -255,7 +258,7 @@ export const useAuthHandlers = () => {
             phone: phone,
             name: name || 'Driver',
             email: email || null,
-            user_type: 'driver'
+            user_type: 'driver' // This is crucial for the trigger to work
           }
         }
       });

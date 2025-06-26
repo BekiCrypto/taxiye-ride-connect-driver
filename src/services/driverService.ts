@@ -23,6 +23,7 @@ export const fetchDriverProfile = async (userId: string): Promise<Driver | null>
       console.log('Driver profile found:', data);
       const driverData = mapDriverData(data);
       console.log('Driver status:', driverData.approved_status);
+      console.log('Driver phone identifier:', driverData.phone);
       return driverData;
     } else {
       console.log('No driver profile found for user:', userId);
@@ -41,6 +42,8 @@ export const updateDriverProfile = async (
   updates: Partial<Omit<Driver, 'phone' | 'user_id'>>
 ): Promise<Driver | null> => {
   try {
+    console.log('Updating driver profile for phone:', driverPhone);
+    
     const { data, error } = await supabase
       .from('drivers')
       .update(updates)
@@ -54,6 +57,7 @@ export const updateDriverProfile = async (
     }
 
     if (data) {
+      console.log('Driver profile updated successfully');
       return mapDriverData(data);
     }
   } catch (err) {
@@ -61,4 +65,25 @@ export const updateDriverProfile = async (
   }
 
   return null;
+};
+
+// Helper function to check if a phone number is a driver phone (has DRV_ prefix)
+export const isDriverPhone = (phone: string): boolean => {
+  return phone.startsWith('DRV_');
+};
+
+// Helper function to get clean phone number without prefix
+export const getCleanPhoneNumber = (phone: string): string => {
+  if (phone.startsWith('DRV_')) {
+    return phone.substring(4);
+  }
+  if (phone.startsWith('PSG_')) {
+    return phone.substring(4);
+  }
+  return phone;
+};
+
+// Helper function to format phone for display
+export const formatPhoneForDisplay = (phone: string): string => {
+  return getCleanPhoneNumber(phone);
 };
