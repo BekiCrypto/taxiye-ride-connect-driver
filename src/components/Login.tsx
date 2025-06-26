@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,10 +30,8 @@ const Login = () => {
 
     setLoading(true);
     
-    // Determine if input is email or phone and format accordingly
     let signInEmail = phoneOrEmail;
     if (!isEmail(phoneOrEmail)) {
-      // Convert phone to email format for login (remove any non-digits and add @demo.com)
       const cleanPhone = phoneOrEmail.replace(/\D/g, '');
       signInEmail = `${cleanPhone}@demo.com`;
     }
@@ -73,10 +70,8 @@ const Login = () => {
       return;
     }
 
-    // For signup, phone is mandatory, email is optional
     const isEmailInput = isEmail(phoneOrEmail);
     if (!isEmailInput) {
-      // Phone number provided - this is the main flow
       const cleanPhone = phoneOrEmail.replace(/\D/g, '');
       const signupEmail = `${cleanPhone}@demo.com`;
       
@@ -91,7 +86,8 @@ const Login = () => {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             name,
-            phone: phoneOrEmail
+            phone: phoneOrEmail,
+            user_type: 'driver' // Mark as driver for proper profile creation
           }
         }
       });
@@ -106,13 +102,13 @@ const Login = () => {
       } else if (data.user) {
         console.log('Sign up successful:', data.user);
         toast({
-          title: "Account Created",
-          description: "Account created successfully! You can now sign in.",
+          title: "Account Created Successfully!",
+          description: "Redirecting to document upload...",
         });
+        // The App component will handle redirection to KYC automatically
       }
       setLoading(false);
     } else {
-      // Email provided - optional flow
       toast({
         title: "Phone Required",
         description: "Please provide a phone number for driver registration",
@@ -159,7 +155,6 @@ const Login = () => {
 
     console.log('Attempting OTP verification with email:', demoEmail);
 
-    // Try to sign in first, if user doesn't exist create them
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: demoEmail,
       password: demoPassword
@@ -167,7 +162,6 @@ const Login = () => {
 
     if (signInError) {
       console.log('User does not exist, creating new user...');
-      // User doesn't exist, create them
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: demoEmail,
         password: demoPassword,
@@ -175,7 +169,8 @@ const Login = () => {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             phone: phoneOrEmail,
-            name: 'Demo Driver'
+            name: name || 'Demo Driver',
+            user_type: 'driver'
           }
         }
       });
@@ -191,7 +186,7 @@ const Login = () => {
         console.log('OTP sign up successful:', signUpData.user);
         toast({
           title: "Welcome!",
-          description: "Account created successfully",
+          description: "Redirecting to document upload...",
         });
       }
     } else if (signInData.user) {
@@ -219,7 +214,8 @@ const Login = () => {
         emailRedirectTo: `${window.location.origin}/`,
         data: {
           name: 'Test Driver',
-          phone: '+251911300466'
+          phone: '+251911300466',
+          user_type: 'driver'
         }
       }
     });
@@ -254,10 +250,10 @@ const Login = () => {
             />
           </div>
           <CardTitle className="text-2xl font-bold text-white">
-            {mode === 'signin' ? 'Welcome Back' : 'Join Taxiye'}
+            {mode === 'signin' ? 'Welcome Back' : 'Join Taxiye as a Driver'}
           </CardTitle>
           <p className="text-gray-400">
-            {mode === 'signin' ? 'Sign in to continue driving' : 'Create your driver account'}
+            {mode === 'signin' ? 'Sign in to continue driving' : 'Create your driver account and start earning'}
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -335,7 +331,7 @@ const Login = () => {
                 className="w-full bg-green-600 hover:bg-green-700"
                 disabled={loading}
               >
-                {loading ? 'Please wait...' : (mode === 'signin' ? 'Sign In' : 'Create Account')}
+                {loading ? 'Please wait...' : (mode === 'signin' ? 'Sign In' : 'Create Driver Account')}
               </Button>
 
               <div className="text-center">
@@ -350,7 +346,6 @@ const Login = () => {
                 </Button>
               </div>
 
-              {/* Test credentials helper */}
               <div className="text-center border-t border-gray-600 pt-4">
                 <div className="text-xs text-gray-400 mb-2">
                   Test Credentials: Phone: 911300466, Password: demo123456
@@ -386,7 +381,7 @@ const Login = () => {
                 className="w-full bg-green-600 hover:bg-green-700"
                 disabled={!otp || loading}
               >
-                {loading ? 'Verifying...' : 'Verify & Login'}
+                {loading ? 'Verifying...' : 'Verify & Continue'}
               </Button>
               <Button 
                 variant="ghost"
