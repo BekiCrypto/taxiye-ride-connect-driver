@@ -15,6 +15,7 @@ export const fetchDriverProfile = async (userId: string): Promise<Driver | null>
 
     if (error) {
       console.error('Error fetching driver profile:', error);
+      // Return null instead of throwing to allow the app to continue
       return null;
     }
 
@@ -25,10 +26,12 @@ export const fetchDriverProfile = async (userId: string): Promise<Driver | null>
       return driverData;
     } else {
       console.log('No driver profile found for user:', userId);
+      // This is expected after database clear - return null cleanly
       return null;
     }
   } catch (err) {
     console.error('Unexpected error fetching driver profile:', err);
+    // Always return null to prevent app hanging
     return null;
   }
 };
