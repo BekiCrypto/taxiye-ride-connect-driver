@@ -318,6 +318,9 @@ const Login = () => {
 
     setLoading(true);
     
+    console.log('Attempting password reset for email:', resetEmail);
+    console.log('Redirect URL will be:', `${window.location.origin}/reset-password`);
+    
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
@@ -326,13 +329,14 @@ const Login = () => {
       console.error('Password reset error:', error);
       toast({
         title: "Reset Failed",
-        description: error.message,
+        description: `Error: ${error.message}. Please check if this email exists in our system.`,
         variant: "destructive"
       });
     } else {
+      console.log('Password reset email sent successfully');
       toast({
         title: "Reset Email Sent",
-        description: "Check your email for password reset instructions",
+        description: "Check your email for password reset instructions. If you don't see it, check your spam folder.",
       });
       setStep('auth');
       setResetEmail('');
