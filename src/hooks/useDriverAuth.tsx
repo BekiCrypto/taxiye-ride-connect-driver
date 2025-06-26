@@ -17,6 +17,10 @@ interface Driver {
   is_online: boolean;
   created_at: string | null;
   updated_at: string | null;
+  rejection_reason?: string;
+  admin_notes?: string;
+  last_reviewed_at?: string;
+  reviewed_by?: string;
 }
 
 export const useDriverAuth = () => {
@@ -89,7 +93,11 @@ export const useDriverAuth = () => {
         wallet_balance: Number(data.wallet_balance || 0),
         is_online: data.is_online || false,
         created_at: data.created_at,
-        updated_at: data.updated_at
+        updated_at: data.updated_at,
+        rejection_reason: data.rejection_reason,
+        admin_notes: data.admin_notes,
+        last_reviewed_at: data.last_reviewed_at,
+        reviewed_by: data.reviewed_by
       };
       setDriver(driverData);
     } else {
@@ -127,7 +135,11 @@ export const useDriverAuth = () => {
         wallet_balance: Number(data.wallet_balance || 0),
         is_online: data.is_online || false,
         created_at: data.created_at,
-        updated_at: data.updated_at
+        updated_at: data.updated_at,
+        rejection_reason: data.rejection_reason,
+        admin_notes: data.admin_notes,
+        last_reviewed_at: data.last_reviewed_at,
+        reviewed_by: data.reviewed_by
       };
       setDriver(updatedDriver);
       return updatedDriver;
