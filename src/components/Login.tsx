@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,10 +12,11 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [otp, setOtp] = useState('');
-  const [step, setStep] = useState<'auth' | 'otp'>('auth');
+  const [step, setStep] = useState<'auth' | 'otp' | 'forgot-password'>('auth');
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [loading, setLoading] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
 
   const validatePhone = (phoneNumber: string) => {
     const cleanPhone = phoneNumber.replace(/\D/g, '');
@@ -297,6 +297,50 @@ const Login = () => {
     setLoading(false);
   };
 
+  const handleForgotPassword = async () => {
+    if (!resetEmail) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address to reset password",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!validateEmail(resetEmail)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) {
+      console.error('Password reset error:', error);
+      toast({
+        title: "Reset Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Reset Email Sent",
+        description: "Check your email for password reset instructions",
+      });
+      setStep('auth');
+      setResetEmail('');
+    }
+    
+    setLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-gray-800 border-gray-700">
@@ -309,10 +353,20 @@ const Login = () => {
             />
           </div>
           <CardTitle className="text-2xl font-bold text-white">
-            {mode === 'signin' ? 'Welcome Back' : 'Join Taxiye as a Driver'}
+            {step === 'forgot-password' 
+              ? 'Reset Password' 
+              : mode === 'signin' 
+                ? 'Welcome Back' 
+                : 'Join Taxiye as a Driver'
+            }
           </CardTitle>
           <p className="text-gray-400">
-            {mode === 'signin' ? 'Sign in to continue driving' : 'Create your driver account and start earning'}
+            {step === 'forgot-password'
+              ? 'Enter your email to reset your password'
+              : mode === 'signin' 
+                ? 'Sign in to continue driving' 
+                : 'Create your driver account and start earning'
+            }
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -408,6 +462,19 @@ const Login = () => {
                 {loading ? 'Please wait...' : (mode === 'signin' ? 'Sign In' : 'Create Driver Account')}
               </Button>
 
+              {mode === 'signin' && (
+                <div className="text-center">
+                  <Button 
+                    variant="ghost"
+                    onClick={() => setStep('forgot-password')}
+                    className="text-gray-400 hover:text-white text-sm p-0 h-auto"
+                    disabled={loading}
+                  >
+                    Forgot your password?
+                  </Button>
+                </div>
+              )}
+
               <div className="text-center">
                 <div className="text-gray-400 text-sm mb-2">Or verify with OTP</div>
                 <Button 
@@ -419,6 +486,42 @@ const Login = () => {
                   {loading ? 'Sending...' : 'Send OTP to Phone & Email'}
                 </Button>
               </div>
+            </>
+          ) : step === 'forgot-password' ? (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Email Address *
+                </label>
+                <Input
+                  type="email"
+                  placeholder="Enter your email address"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  required
+                />
+              </div>
+              
+              <Button 
+                onClick={handleForgotPassword}
+                className="w-full bg-green-600 hover:bg-green-700"
+                disabled={!resetEmail || loading}
+              >
+                {loading ? 'Sending...' : 'Send Reset Email'}
+              </Button>
+              
+              <Button 
+                variant="ghost"
+                onClick={() => {
+                  setStep('auth');
+                  setResetEmail('');
+                }}
+                className="w-full text-gray-400"
+                disabled={loading}
+              >
+                Back to Login
+              </Button>
             </>
           ) : (
             <>
