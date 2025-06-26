@@ -5,16 +5,35 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useDriverAuth } from "@/hooks/useDriverAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import Index from "./pages/Index";
 import Login from "./components/Login";
 import KYCUpload from "./components/KYCUpload";
 import SplashScreen from "./components/SplashScreen";
+import AdminLogin from "./components/AdminLogin";
+import AdminDashboard from "./components/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   const { user, driver, loading } = useDriverAuth();
+  const { isAdmin, loading: adminLoading, login: adminLogin, logout: adminLogout } = useAdminAuth();
+
+  // Check for admin access first
+  if (adminLoading) {
+    return <SplashScreen />;
+  }
+
+  // If admin is logged in, show admin dashboard
+  if (isAdmin) {
+    return <AdminDashboard onLogout={adminLogout} />;
+  }
+
+  // Check URL for admin access
+  if (window.location.pathname === '/admin' || window.location.search.includes('admin=true')) {
+    return <AdminLogin onLogin={adminLogin} />;
+  }
 
   console.log('App state:', { user: !!user, driver: !!driver, loading, driverStatus: driver?.approved_status });
 
