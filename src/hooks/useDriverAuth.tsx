@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -133,6 +132,7 @@ export const useDriverAuth = () => {
           reviewed_by: data.reviewed_by
         };
         setDriver(driverData);
+        console.log('Driver status:', driverData.approved_status);
       } else {
         console.log('No driver profile found for user:', userId);
         setDriver(null);
@@ -141,6 +141,7 @@ export const useDriverAuth = () => {
       console.error('Unexpected error fetching driver profile:', err);
       setDriver(null);
     } finally {
+      console.log('Setting loading to false');
       setLoading(false);
     }
   };
