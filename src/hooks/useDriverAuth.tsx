@@ -78,13 +78,15 @@ export const useDriverAuth = () => {
 
   const handleFetchDriverProfile = async (userId: string) => {
     try {
+      console.log('Starting to fetch driver profile for:', userId);
       const driverData = await fetchDriverProfile(userId);
+      console.log('Driver profile fetch result:', driverData);
       setDriver(driverData);
     } catch (err) {
       console.error('Error in handleFetchDriverProfile:', err);
       setDriver(null);
     } finally {
-      console.log('Setting loading to false');
+      console.log('Setting loading to false after driver profile fetch');
       setLoading(false);
     }
   };
