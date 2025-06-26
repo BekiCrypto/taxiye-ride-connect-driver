@@ -40,25 +40,31 @@ export const useDriverAuth = () => {
         if (error) {
           console.error('Error getting session:', error);
           if (isMounted) {
+            setUser(null);
+            setDriver(null);
             setLoading(false);
           }
           return;
         }
         
-        console.log('Initial session:', !!session?.user);
+        console.log('Initial session found:', !!session?.user);
         
         if (isMounted) {
-          setUser(session?.user ?? null);
-          
           if (session?.user) {
+            setUser(session.user);
+            // Fetch driver profile
             await fetchDriverProfile(session.user.id);
           } else {
+            setUser(null);
+            setDriver(null);
             setLoading(false);
           }
         }
       } catch (err) {
         console.error('Unexpected error getting session:', err);
         if (isMounted) {
+          setUser(null);
+          setDriver(null);
           setLoading(false);
         }
       }
@@ -70,15 +76,15 @@ export const useDriverAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, !!session?.user);
       
-      if (isMounted) {
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchDriverProfile(session.user.id);
-        } else {
-          setDriver(null);
-          setLoading(false);
-        }
+      if (!isMounted) return;
+
+      if (session?.user) {
+        setUser(session.user);
+        await fetchDriverProfile(session.user.id);
+      } else {
+        setUser(null);
+        setDriver(null);
+        setLoading(false);
       }
     });
 
@@ -96,7 +102,7 @@ export const useDriverAuth = () => {
         .from('drivers')
         .select('*')
         .eq('user_id', userId)
-        .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no data
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching driver profile:', error);
@@ -106,7 +112,7 @@ export const useDriverAuth = () => {
       }
 
       if (data) {
-        console.log('Driver profile fetched:', data);
+        console.log('Driver profile found:', data);
         const driverData: Driver = {
           phone: data.phone,
           user_id: data.user_id,
@@ -142,40 +148,44 @@ export const useDriverAuth = () => {
   const updateDriverProfile = async (updates: Partial<Omit<Driver, 'phone' | 'user_id'>>) => {
     if (!driver) return null;
 
-    const { data, error } = await supabase
-      .from('drivers')
-      .update(updates)
-      .eq('phone', driver.phone)
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('drivers')
+        .update(updates)
+        .eq('phone', driver.phone)
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error updating driver profile:', error);
-      return null;
-    }
+      if (error) {
+        console.error('Error updating driver profile:', error);
+        return null;
+      }
 
-    if (data) {
-      const updatedDriver: Driver = {
-        phone: data.phone,
-        user_id: data.user_id,
-        name: data.name,
-        email: data.email,
-        license_number: data.license_number,
-        vehicle_model: data.vehicle_model,
-        vehicle_color: data.vehicle_color,
-        plate_number: data.plate_number,
-        approved_status: data.approved_status as 'pending' | 'approved' | 'rejected',
-        wallet_balance: Number(data.wallet_balance || 0),
-        is_online: data.is_online || false,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        rejection_reason: data.rejection_reason,
-        admin_notes: data.admin_notes,
-        last_reviewed_at: data.last_reviewed_at,
-        reviewed_by: data.reviewed_by
-      };
-      setDriver(updatedDriver);
-      return updatedDriver;
+      if (data) {
+        const updatedDriver: Driver = {
+          phone: data.phone,
+          user_id: data.user_id,
+          name: data.name,
+          email: data.email,
+          license_number: data.license_number,
+          vehicle_model: data.vehicle_model,
+          vehicle_color: data.vehicle_color,
+          plate_number: data.plate_number,
+          approved_status: data.approved_status as 'pending' | 'approved' | 'rejected',
+          wallet_balance: Number(data.wallet_balance || 0),
+          is_online: data.is_online || false,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          rejection_reason: data.rejection_reason,
+          admin_notes: data.admin_notes,
+          last_reviewed_at: data.last_reviewed_at,
+          reviewed_by: data.reviewed_by
+        };
+        setDriver(updatedDriver);
+        return updatedDriver;
+      }
+    } catch (err) {
+      console.error('Unexpected error updating driver profile:', err);
     }
 
     return null;

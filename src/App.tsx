@@ -20,51 +20,60 @@ const AppContent = () => {
   const { user, driver, loading } = useDriverAuth();
   const { isAdmin, loading: adminLoading, login: adminLogin, logout: adminLogout } = useAdminAuth();
 
-  // Check for admin access first
-  if (adminLoading) {
+  console.log('App render state:', { 
+    user: !!user, 
+    driver: !!driver, 
+    loading, 
+    adminLoading,
+    isAdmin,
+    driverStatus: driver?.approved_status 
+  });
+
+  // Show loading screen while checking authentication
+  if (loading || adminLoading) {
+    console.log('Showing splash screen - loading states:', { loading, adminLoading });
     return <SplashScreen />;
   }
 
-  // If admin is logged in, show admin dashboard
+  // Check for admin access first
   if (isAdmin) {
+    console.log('Admin logged in, showing dashboard');
     return <AdminDashboard onLogout={adminLogout} />;
   }
 
   // Check URL for admin access
   if (window.location.pathname === '/admin' || window.location.search.includes('admin=true')) {
+    console.log('Admin login page requested');
     return <AdminLogin onLogin={adminLogin} />;
   }
 
-  console.log('App state:', { user: !!user, driver: !!driver, loading, driverStatus: driver?.approved_status });
-
-  if (loading) {
-    return <SplashScreen />;
-  }
-
+  // If no user is authenticated, show login
   if (!user) {
-    console.log('No user found, showing login');
+    console.log('No user authenticated, showing login');
     return <Login />;
   }
 
   // If user is authenticated but no driver profile exists or not approved, show KYC
   if (!driver || driver.approved_status === 'pending' || driver.approved_status === 'rejected') {
-    console.log('Driver not approved, showing KYC');
+    console.log('Driver profile missing or not approved, showing KYC:', {
+      hasDriver: !!driver,
+      status: driver?.approved_status
+    });
     return (
       <KYCUpload 
         onApproval={() => {
-          // This will be handled by the database trigger and auth state change
           console.log('KYC approval completed');
         }} 
       />
     );
   }
 
-  console.log('User and driver approved, showing main app');
+  // User is authenticated and driver is approved - show main app
+  console.log('User authenticated and driver approved, showing main app');
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Index />} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
