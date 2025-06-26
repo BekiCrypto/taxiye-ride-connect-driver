@@ -53,30 +53,32 @@ const AppContent = () => {
     return <Login />;
   }
 
-  // If user is authenticated but no driver profile exists or not approved, show KYC
-  if (!driver || driver.approved_status === 'pending' || driver.approved_status === 'rejected') {
-    console.log('Driver profile missing or not approved, showing KYC:', {
-      hasDriver: !!driver,
-      status: driver?.approved_status
-    });
+  // If user is authenticated and driver is approved, show main app
+  if (driver && driver.approved_status === 'approved') {
+    console.log('Driver is approved, showing main dashboard');
     return (
-      <KYCUpload 
-        onApproval={() => {
-          console.log('KYC approval completed');
-        }} 
-      />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
     );
   }
 
-  // User is authenticated and driver is approved - show main app
-  console.log('User authenticated and driver approved, showing main app');
+  // If user is authenticated but no driver profile or not approved, show KYC
+  console.log('Driver profile missing or not approved, showing KYC:', {
+    hasDriver: !!driver,
+    status: driver?.approved_status
+  });
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    <KYCUpload 
+      onApproval={() => {
+        console.log('KYC approval completed, refreshing driver profile');
+        // The useDriverAuth hook will automatically refresh and detect the approval
+        window.location.reload();
+      }} 
+    />
   );
 };
 
