@@ -1,26 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-
-interface Driver {
-  phone: string; // Primary key in the database
-  user_id: string;
-  name: string;
-  email?: string;
-  license_number?: string;
-  vehicle_model?: string;
-  vehicle_color?: string;
-  plate_number?: string;
-  approved_status: 'pending' | 'approved' | 'rejected';
-  wallet_balance: number;
-  is_online: boolean;
-  created_at: string | null;
-  updated_at: string | null;
-  rejection_reason?: string;
-  admin_notes?: string;
-  last_reviewed_at?: string;
-  reviewed_by?: string;
-}
+import { Driver } from '@/types/driver';
+import { fetchDriverProfile, updateDriverProfile } from '@/services/driverService';
 
 export const useDriverAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -52,7 +35,7 @@ export const useDriverAuth = () => {
           if (session?.user) {
             setUser(session.user);
             // Fetch driver profile
-            await fetchDriverProfile(session.user.id);
+            await handleFetchDriverProfile(session.user.id);
           } else {
             setUser(null);
             setDriver(null);
@@ -79,7 +62,7 @@ export const useDriverAuth = () => {
 
       if (session?.user) {
         setUser(session.user);
-        await fetchDriverProfile(session.user.id);
+        await handleFetchDriverProfile(session.user.id);
       } else {
         setUser(null);
         setDriver(null);
@@ -93,52 +76,12 @@ export const useDriverAuth = () => {
     };
   }, []);
 
-  const fetchDriverProfile = async (userId: string) => {
-    console.log('Fetching driver profile for user:', userId);
-    
+  const handleFetchDriverProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('drivers')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching driver profile:', error);
-        setDriver(null);
-        setLoading(false);
-        return;
-      }
-
-      if (data) {
-        console.log('Driver profile found:', data);
-        const driverData: Driver = {
-          phone: data.phone,
-          user_id: data.user_id,
-          name: data.name,
-          email: data.email,
-          license_number: data.license_number,
-          vehicle_model: data.vehicle_model,
-          vehicle_color: data.vehicle_color,
-          plate_number: data.plate_number,
-          approved_status: data.approved_status as 'pending' | 'approved' | 'rejected',
-          wallet_balance: Number(data.wallet_balance || 0),
-          is_online: data.is_online || false,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          rejection_reason: data.rejection_reason,
-          admin_notes: data.admin_notes,
-          last_reviewed_at: data.last_reviewed_at,
-          reviewed_by: data.reviewed_by
-        };
-        setDriver(driverData);
-        console.log('Driver status:', driverData.approved_status);
-      } else {
-        console.log('No driver profile found for user:', userId);
-        setDriver(null);
-      }
+      const driverData = await fetchDriverProfile(userId);
+      setDriver(driverData);
     } catch (err) {
-      console.error('Unexpected error fetching driver profile:', err);
+      console.error('Error in handleFetchDriverProfile:', err);
       setDriver(null);
     } finally {
       console.log('Setting loading to false');
@@ -146,50 +89,14 @@ export const useDriverAuth = () => {
     }
   };
 
-  const updateDriverProfile = async (updates: Partial<Omit<Driver, 'phone' | 'user_id'>>) => {
+  const handleUpdateDriverProfile = async (updates: Partial<Omit<Driver, 'phone' | 'user_id'>>) => {
     if (!driver) return null;
 
-    try {
-      const { data, error } = await supabase
-        .from('drivers')
-        .update(updates)
-        .eq('phone', driver.phone)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating driver profile:', error);
-        return null;
-      }
-
-      if (data) {
-        const updatedDriver: Driver = {
-          phone: data.phone,
-          user_id: data.user_id,
-          name: data.name,
-          email: data.email,
-          license_number: data.license_number,
-          vehicle_model: data.vehicle_model,
-          vehicle_color: data.vehicle_color,
-          plate_number: data.plate_number,
-          approved_status: data.approved_status as 'pending' | 'approved' | 'rejected',
-          wallet_balance: Number(data.wallet_balance || 0),
-          is_online: data.is_online || false,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          rejection_reason: data.rejection_reason,
-          admin_notes: data.admin_notes,
-          last_reviewed_at: data.last_reviewed_at,
-          reviewed_by: data.reviewed_by
-        };
-        setDriver(updatedDriver);
-        return updatedDriver;
-      }
-    } catch (err) {
-      console.error('Unexpected error updating driver profile:', err);
+    const updatedDriver = await updateDriverProfile(driver.phone, updates);
+    if (updatedDriver) {
+      setDriver(updatedDriver);
     }
-
-    return null;
+    return updatedDriver;
   };
 
   const signOut = async () => {
@@ -201,8 +108,8 @@ export const useDriverAuth = () => {
     user,
     driver,
     loading,
-    updateDriverProfile,
-    fetchDriverProfile: () => user ? fetchDriverProfile(user.id) : null,
+    updateDriverProfile: handleUpdateDriverProfile,
+    fetchDriverProfile: () => user ? handleFetchDriverProfile(user.id) : null,
     signOut
   };
 };
