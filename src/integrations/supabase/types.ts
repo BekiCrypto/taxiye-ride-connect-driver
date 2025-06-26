@@ -9,27 +9,83 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_verification_sessions: {
+        Row: {
+          ai_confidence_score: number | null
+          completed_at: string | null
+          created_at: string | null
+          driver_phone_ref: string | null
+          failure_reason: string | null
+          id: string
+          liveness_check_passed: boolean | null
+          session_status: string | null
+          verification_result: string | null
+        }
+        Insert: {
+          ai_confidence_score?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          driver_phone_ref?: string | null
+          failure_reason?: string | null
+          id?: string
+          liveness_check_passed?: boolean | null
+          session_status?: string | null
+          verification_result?: string | null
+        }
+        Update: {
+          ai_confidence_score?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          driver_phone_ref?: string | null
+          failure_reason?: string | null
+          id?: string
+          liveness_check_passed?: boolean | null
+          session_status?: string | null
+          verification_result?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_verification_sessions_driver_phone_ref_fkey"
+            columns: ["driver_phone_ref"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["phone"]
+          },
+        ]
+      }
       documents: {
         Row: {
+          admin_notes: string | null
           driver_phone_ref: string | null
           file_url: string | null
           id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string | null
           type: string
           uploaded_at: string | null
         }
         Insert: {
+          admin_notes?: string | null
           driver_phone_ref?: string | null
           file_url?: string | null
           id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string | null
           type: string
           uploaded_at?: string | null
         }
         Update: {
+          admin_notes?: string | null
           driver_phone_ref?: string | null
           file_url?: string | null
           id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string | null
           type?: string
           uploaded_at?: string | null
@@ -46,14 +102,18 @@ export type Database = {
       }
       drivers: {
         Row: {
+          admin_notes: string | null
           approved_status: string | null
           created_at: string | null
           email: string | null
           is_online: boolean | null
+          last_reviewed_at: string | null
           license_number: string | null
           name: string
           phone: string
           plate_number: string | null
+          rejection_reason: string | null
+          reviewed_by: string | null
           updated_at: string | null
           user_id: string | null
           vehicle_color: string | null
@@ -61,14 +121,18 @@ export type Database = {
           wallet_balance: number | null
         }
         Insert: {
+          admin_notes?: string | null
           approved_status?: string | null
           created_at?: string | null
           email?: string | null
           is_online?: boolean | null
+          last_reviewed_at?: string | null
           license_number?: string | null
           name: string
           phone: string
           plate_number?: string | null
+          rejection_reason?: string | null
+          reviewed_by?: string | null
           updated_at?: string | null
           user_id?: string | null
           vehicle_color?: string | null
@@ -76,14 +140,18 @@ export type Database = {
           wallet_balance?: number | null
         }
         Update: {
+          admin_notes?: string | null
           approved_status?: string | null
           created_at?: string | null
           email?: string | null
           is_online?: boolean | null
+          last_reviewed_at?: string | null
           license_number?: string | null
           name?: string
           phone?: string
           plate_number?: string | null
+          rejection_reason?: string | null
+          reviewed_by?: string | null
           updated_at?: string | null
           user_id?: string | null
           vehicle_color?: string | null
