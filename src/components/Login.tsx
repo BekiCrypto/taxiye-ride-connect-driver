@@ -99,7 +99,7 @@ const Login = () => {
   };
 
   const handleSignUp = async () => {
-    if (!phone || !email || !password || !name) {
+    if (!phone || !password || !name) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields",
@@ -117,7 +117,7 @@ const Login = () => {
       return;
     }
 
-    if (!validateEmail(email)) {
+    if (email && !validateEmail(email)) {
       toast({
         title: "Invalid Email",
         description: "Please enter a valid email address",
@@ -142,7 +142,7 @@ const Login = () => {
         data: {
           name,
           phone: phone,
-          email: email, // Store actual email in metadata
+          email: email || null, // Store actual email in metadata, can be null
           user_type: 'driver'
         }
       }
@@ -184,16 +184,7 @@ const Login = () => {
       return;
     }
 
-    if (mode === 'signup' && !email) {
-      toast({
-        title: "Email Required",
-        description: "Please enter an email address for signup",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (mode === 'signup' && !validateEmail(email)) {
+    if (mode === 'signup' && email && !validateEmail(email)) {
       toast({
         title: "Invalid Email",
         description: "Please enter a valid email address",
@@ -208,7 +199,7 @@ const Login = () => {
     const otpCode = generateOTP();
     setGeneratedOtp(otpCode);
     
-    // Send OTP to both phone and email
+    // Send OTP to phone and email (if provided)
     await sendOTPToSMS(phone, otpCode);
     if (email) {
       await sendOTPToEmail(email, otpCode);
@@ -219,7 +210,7 @@ const Login = () => {
     
     toast({
       title: "OTP Sent",
-      description: `Verification code sent to both your phone and email`,
+      description: email ? `Verification code sent to both your phone and email` : `Verification code sent to your phone`,
     });
   };
 
@@ -281,7 +272,7 @@ const Login = () => {
           data: {
             phone: phone,
             name: name || 'Driver',
-            email: email,
+            email: email || null,
             user_type: 'driver'
           }
         }
@@ -383,7 +374,7 @@ const Login = () => {
               {mode === 'signup' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Email Address *
+                    Email Address
                   </label>
                   <Input
                     type="email"
@@ -391,7 +382,6 @@ const Login = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="bg-gray-700 border-gray-600 text-white"
-                    required
                   />
                 </div>
               )}
@@ -434,7 +424,7 @@ const Login = () => {
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Enter verification code sent to your phone and email
+                  Enter verification code sent to your phone{email ? ' and email' : ''}
                 </label>
                 <div className="flex justify-center">
                   <InputOTP
@@ -451,7 +441,7 @@ const Login = () => {
                   </InputOTP>
                 </div>
                 <p className="text-sm text-gray-400 mt-2 text-center">
-                  Check your phone SMS and email for the verification code
+                  Check your phone SMS{email ? ' and email' : ''} for the verification code
                 </p>
               </div>
               <Button 
