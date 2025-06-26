@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -46,14 +47,8 @@ const AppContent = () => {
     return <AdminLogin onLogin={adminLogin} />;
   }
 
-  // If no user is authenticated, show login
-  if (!user) {
-    console.log('No user authenticated, showing login');
-    return <Login />;
-  }
-
   // If user is authenticated and driver is approved, show main app
-  if (driver && driver.approved_status === 'approved') {
+  if (user && driver && driver.approved_status === 'approved') {
     console.log('Driver is approved, showing main dashboard');
     return (
       <BrowserRouter>
@@ -66,19 +61,25 @@ const AppContent = () => {
   }
 
   // If user is authenticated but no driver profile or not approved, show KYC
-  console.log('Driver profile missing or not approved, showing KYC:', {
-    hasDriver: !!driver,
-    status: driver?.approved_status
-  });
-  return (
-    <KYCUpload 
-      onApproval={() => {
-        console.log('KYC approval completed, refreshing driver profile');
-        // The useDriverAuth hook will automatically refresh and detect the approval
-        window.location.reload();
-      }} 
-    />
-  );
+  if (user && (!driver || driver.approved_status !== 'approved')) {
+    console.log('Driver profile missing or not approved, showing KYC:', {
+      hasDriver: !!driver,
+      status: driver?.approved_status
+    });
+    return (
+      <KYCUpload 
+        onApproval={() => {
+          console.log('KYC approval completed, refreshing driver profile');
+          // The useDriverAuth hook will automatically refresh and detect the approval
+          window.location.reload();
+        }} 
+      />
+    );
+  }
+
+  // Default to login page (this is now the primary landing page)
+  console.log('No user authenticated or requirements not met, showing login');
+  return <Login />;
 };
 
 const App = () => (
