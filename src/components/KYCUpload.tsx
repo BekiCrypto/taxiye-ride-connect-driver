@@ -1,15 +1,19 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, CheckCircle, Camera, LogOut, Home, Sparkles, Eye, AlertTriangle, Clock, Send } from 'lucide-react';
+import { FileText, LogOut, Clock } from 'lucide-react';
 import { useDriverAuth } from '@/hooks/useDriverAuth';
 import { useDocumentUpload } from '@/hooks/useDocumentUpload';
 import { useAIVerification } from '@/hooks/useAIVerification';
 import { toast } from '@/hooks/use-toast';
+import KYCSuccessState from './kyc/KYCSuccessState';
+import KYCRejectionState from './kyc/KYCRejectionState';
+import KYCCameraInterface from './kyc/KYCCameraInterface';
+import KYCAIVerificationInterface from './kyc/KYCAIVerificationInterface';
+import KYCDocumentList from './kyc/KYCDocumentList';
+import KYCActionButtons from './kyc/KYCActionButtons';
 
 interface KYCUploadProps {
   onApproval: () => void;
@@ -17,7 +21,7 @@ interface KYCUploadProps {
 
 const KYCUpload = ({ onApproval }: KYCUploadProps) => {
   const { driver, signOut } = useDriverAuth();
-  const { uploads, uploading, uploadDocument, capturePhoto } = useDocumentUpload();
+  const { uploads, uploading, uploadDocument } = useDocumentUpload();
   const { verifying, verificationStep, progress, startAIVerification, submitForManualReview } = useAIVerification();
   
   const [currentUploadType, setCurrentUploadType] = useState<string>('');
@@ -35,7 +39,6 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
     { key: 'selfie', label: 'Selfie Photo', required: true, formats: 'JPEG, PNG' }
   ];
 
-  // Check if all documents are uploaded
   const allDocsUploaded = documents.every(doc => 
     uploads[doc.key]?.status === 'uploaded'
   );
@@ -53,7 +56,6 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type and size
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
       toast({
@@ -77,23 +79,6 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
     event.target.value = '';
   };
 
-  const handleCameraCapture = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
-    } catch (error) {
-      toast({
-        title: "Camera Access Denied",
-        description: "Please allow camera access to take a selfie",
-        variant: "destructive"
-      });
-      setShowCamera(false);
-    }
-  };
-
   const takeSelfie = async () => {
     if (!videoRef.current) return;
 
@@ -111,7 +96,6 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
         await uploadDocument('selfie', file);
         setShowCamera(false);
         
-        // Stop camera stream
         const stream = videoRef.current?.srcObject as MediaStream;
         stream?.getTracks().forEach(track => track.stop());
       }
@@ -164,190 +148,33 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
     setSubmittingForReview(false);
   };
 
-  useEffect(() => {
-    if (showCamera) {
-      handleCameraCapture();
-    }
-  }, [showCamera]);
-
   // Show success state if approved
   if (driver?.approved_status === 'approved') {
-    return (
-      <div className="min-h-screen bg-gray-900 p-4 flex flex-col items-center justify-center">
-        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4">
-              <img 
-                src="https://cmsprod.taxiye.com/uploads/taxiye_logo_main_09d8b73c2f.svg" 
-                alt="Taxiye Logo" 
-                className="h-12 w-auto mx-auto"
-              />
-            </div>
-            <div className="mx-auto w-20 h-20 bg-green-600 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle className="h-10 w-10 text-white" />
-            </div>
-            <CardTitle className="text-2xl font-bold text-white">You're All Set! 🎉</CardTitle>
-            <p className="text-gray-400">Your documents have been approved and you can now start driving.</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              onClick={onApproval}
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
-            >
-              <Home className="h-4 w-4 mr-2" />
-              Go to Dashboard
-            </Button>
-            
-            <Button
-              onClick={signOut}
-              variant="outline"
-              className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <KYCSuccessState onApproval={onApproval} onSignOut={signOut} />;
   }
 
   // Show rejection state with reason
   if (driver?.approved_status === 'rejected' && driver.rejection_reason) {
-    return (
-      <div className="min-h-screen bg-gray-900 p-4 flex flex-col items-center justify-center">
-        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4">
-              <img 
-                src="https://cmsprod.taxiye.com/uploads/taxiye_logo_main_09d8b73c2f.svg" 
-                alt="Taxiye Logo" 
-                className="h-12 w-auto mx-auto"
-              />
-            </div>
-            <div className="mx-auto w-20 h-20 bg-red-600 rounded-full flex items-center justify-center mb-4">
-              <AlertTriangle className="h-10 w-10 text-white" />
-            </div>
-            <CardTitle className="text-2xl font-bold text-white">Documents Rejected</CardTitle>
-            <p className="text-gray-400">Your documents need to be corrected and resubmitted.</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert className="bg-red-900/50 border-red-700/50">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription className="text-red-200">
-                <div className="font-medium mb-2">Rejection Reason:</div>
-                {driver.rejection_reason}
-              </AlertDescription>
-            </Alert>
-
-            {driver.admin_notes && (
-              <Alert className="bg-blue-900/50 border-blue-700/50">
-                <AlertDescription className="text-blue-200">
-                  <div className="font-medium mb-2">Admin Notes:</div>
-                  {driver.admin_notes}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <Button
-              onClick={() => window.location.reload()}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Upload New Documents
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <KYCRejectionState driver={driver} />;
   }
 
   // Show camera interface
   if (showCamera) {
     return (
-      <div className="min-h-screen bg-gray-900 p-4 flex flex-col items-center justify-center">
-        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-white">Take Selfie</CardTitle>
-            <p className="text-gray-400">Position your face in the center and click capture</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="relative">
-              <video
-                ref={videoRef}
-                className="w-full rounded-lg"
-                autoPlay
-                playsInline
-                muted
-              />
-              <div className="absolute inset-0 border-2 border-dashed border-white/30 rounded-lg pointer-events-none" />
-            </div>
-            
-            <div className="flex space-x-3">
-              <Button
-                onClick={takeSelfie}
-                className="flex-1 bg-purple-600 hover:bg-purple-700"
-              >
-                <Camera className="h-4 w-4 mr-2" />
-                Capture
-              </Button>
-              <Button
-                onClick={cancelCamera}
-                variant="outline"
-                className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
-              >
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <KYCCameraInterface 
+        onCapture={takeSelfie} 
+        onCancel={cancelCamera}
+      />
     );
   }
 
   // Show AI verification process
   if (showAIVerification && verifying) {
     return (
-      <div className="min-h-screen bg-gray-900 p-4 flex flex-col items-center justify-center">
-        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
-          <CardHeader className="text-center">
-            <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
-              verificationStep === 'liveness' ? 'bg-green-600' : 'bg-purple-600'
-            } animate-pulse`}>
-              {verificationStep === 'liveness' ? (
-                <Eye className="h-8 w-8 text-white" />
-              ) : (
-                <Sparkles className="h-8 w-8 text-white" />
-              )}
-            </div>
-            <CardTitle className="text-2xl font-bold text-white">
-              {verificationStep === 'liveness' ? 'Liveness Check' : 'AI Verification'}
-            </CardTitle>
-            <p className="text-gray-400">
-              {verificationStep === 'liveness' 
-                ? 'Please look directly at your camera...'
-                : 'AI is analyzing your documents...'
-              }
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Progress</span>
-                <span className="text-white">{progress}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </div>
-
-            {verificationStep === 'liveness' && (
-              <div className="flex justify-center">
-                <div className="w-32 h-32 border-4 border-green-500 rounded-full flex items-center justify-center animate-pulse">
-                  <Eye className="h-16 w-16 text-green-400" />
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <KYCAIVerificationInterface 
+        verificationStep={verificationStep}
+        progress={progress}
+      />
     );
   }
 
@@ -401,81 +228,21 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
             </AlertDescription>
           </Alert>
 
-          {documents.map((doc) => (
-            <Card key={doc.key} className="bg-gray-700 border-gray-600">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    {uploads[doc.key]?.status === 'uploaded' ? (
-                      <CheckCircle className="h-5 w-5 text-green-400" />
-                    ) : doc.key === 'selfie' ? (
-                      <Camera className="h-5 w-5 text-gray-400" />
-                    ) : (
-                      <Upload className="h-5 w-5 text-gray-400" />
-                    )}
-                    <div>
-                      <div className="text-white font-medium">{doc.label}</div>
-                      <div className="text-xs text-gray-400">{doc.formats}</div>
-                      {doc.required && (
-                        <Badge variant="destructive" className="text-xs mt-1">Required</Badge>
-                      )}
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => handleFileUpload(doc.key)}
-                    disabled={uploads[doc.key]?.status === 'uploaded' || uploading}
-                    className={
-                      uploads[doc.key]?.status === 'uploaded'
-                        ? 'bg-green-600 text-white'
-                        : doc.key === 'selfie'
-                        ? 'bg-purple-600 hover:bg-purple-700'
-                        : 'bg-blue-600 hover:bg-blue-700'
-                    }
-                  >
-                    {uploads[doc.key]?.status === 'uploaded' 
-                      ? 'Uploaded' 
-                      : doc.key === 'selfie' 
-                      ? 'Take Selfie' 
-                      : uploading && currentUploadType === doc.key
-                      ? 'Uploading...'
-                      : 'Upload'
-                    }
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          <KYCDocumentList
+            documents={documents}
+            uploads={uploads}
+            uploading={uploading}
+            currentUploadType={currentUploadType}
+            onUpload={handleFileUpload}
+          />
 
-          {allDocsUploaded && (
-            <div className="space-y-3">
-              <Alert className="bg-green-900 border-green-700">
-                <CheckCircle className="h-4 w-4" />
-                <AlertDescription className="text-green-200">
-                  All documents uploaded successfully! Choose your verification method:
-                </AlertDescription>
-              </Alert>
-
-              <Button
-                onClick={handleSubmitForApproval}
-                disabled={submittingForReview}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                {submittingForReview ? 'Submitting...' : 'Submit for Approval (24-48 hours)'}
-              </Button>
-
-              <Button
-                onClick={handleAIVerification}
-                disabled={verifying}
-                variant="outline"
-                className="w-full border-purple-600 text-purple-300 hover:bg-purple-900/20"
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
-                {verifying ? 'AI Verifying...' : 'Try AI-Assisted Verification (Instant)'}
-              </Button>
-            </div>
-          )}
+          <KYCActionButtons
+            allDocsUploaded={allDocsUploaded}
+            submittingForReview={submittingForReview}
+            verifying={verifying}
+            onSubmitForApproval={handleSubmitForApproval}
+            onAIVerification={handleAIVerification}
+          />
 
           <input
             ref={fileInputRef}
