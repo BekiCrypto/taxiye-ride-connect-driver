@@ -4,10 +4,9 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Driver {
-  id: string;
+  phone: string; // Primary key in the database
   user_id: string;
   name: string;
-  phone: string;
   email?: string;
   license_number?: string;
   vehicle_model?: string;
@@ -16,8 +15,8 @@ interface Driver {
   approved_status: 'pending' | 'approved' | 'rejected';
   wallet_balance: number;
   is_online: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export const useDriverAuth = () => {
@@ -76,11 +75,21 @@ export const useDriverAuth = () => {
       setDriver(null);
     } else if (data) {
       console.log('Driver profile fetched:', data);
-      // Cast the data to ensure proper typing
+      // Create driver object with proper typing
       const driverData: Driver = {
-        ...data,
+        phone: data.phone,
+        user_id: data.user_id,
+        name: data.name,
+        email: data.email,
+        license_number: data.license_number,
+        vehicle_model: data.vehicle_model,
+        vehicle_color: data.vehicle_color,
+        plate_number: data.plate_number,
         approved_status: data.approved_status as 'pending' | 'approved' | 'rejected',
-        wallet_balance: Number(data.wallet_balance)
+        wallet_balance: Number(data.wallet_balance || 0),
+        is_online: data.is_online || false,
+        created_at: data.created_at,
+        updated_at: data.updated_at
       };
       setDriver(driverData);
     } else {
@@ -89,13 +98,13 @@ export const useDriverAuth = () => {
     }
   };
 
-  const updateDriverProfile = async (updates: Partial<Driver>) => {
+  const updateDriverProfile = async (updates: Partial<Omit<Driver, 'phone' | 'user_id'>>) => {
     if (!driver) return null;
 
     const { data, error } = await supabase
       .from('drivers')
       .update(updates)
-      .eq('id', driver.id)
+      .eq('phone', driver.phone)
       .select()
       .single();
 
@@ -106,9 +115,19 @@ export const useDriverAuth = () => {
 
     if (data) {
       const updatedDriver: Driver = {
-        ...data,
+        phone: data.phone,
+        user_id: data.user_id,
+        name: data.name,
+        email: data.email,
+        license_number: data.license_number,
+        vehicle_model: data.vehicle_model,
+        vehicle_color: data.vehicle_color,
+        plate_number: data.plate_number,
         approved_status: data.approved_status as 'pending' | 'approved' | 'rejected',
-        wallet_balance: Number(data.wallet_balance)
+        wallet_balance: Number(data.wallet_balance || 0),
+        is_online: data.is_online || false,
+        created_at: data.created_at,
+        updated_at: data.updated_at
       };
       setDriver(updatedDriver);
       return updatedDriver;

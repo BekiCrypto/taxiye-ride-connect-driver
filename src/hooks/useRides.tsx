@@ -5,9 +5,10 @@ import { useDriverAuth } from './useDriverAuth';
 
 interface Ride {
   id: string;
-  driver_id: string;
+  driver_phone_ref: string;
   passenger_name?: string;
   passenger_phone?: string;
+  passenger_phone_ref?: string;
   pickup_location: string;
   dropoff_location: string;
   distance_km?: number;
@@ -15,9 +16,9 @@ interface Ride {
   fare?: number;
   commission?: number;
   net_earnings?: number;
-  created_at: string;
-  started_at?: string;
-  completed_at?: string;
+  created_at: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
 }
 
 export const useRides = () => {
@@ -39,20 +40,29 @@ export const useRides = () => {
     const { data, error } = await supabase
       .from('rides')
       .select('*')
-      .eq('driver_id', driver.id)
+      .eq('driver_phone_ref', driver.phone)
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching rides:', error);
     } else if (data) {
-      // Cast the data to ensure proper typing
+      // Map the data to ensure proper typing
       const ridesData: Ride[] = data.map(ride => ({
-        ...ride,
+        id: ride.id,
+        driver_phone_ref: ride.driver_phone_ref,
+        passenger_name: ride.passenger_name,
+        passenger_phone: ride.passenger_phone,
+        passenger_phone_ref: ride.passenger_phone_ref,
+        pickup_location: ride.pickup_location,
+        dropoff_location: ride.dropoff_location,
+        distance_km: ride.distance_km ? Number(ride.distance_km) : undefined,
         status: ride.status as 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled',
         fare: ride.fare ? Number(ride.fare) : undefined,
         commission: ride.commission ? Number(ride.commission) : undefined,
         net_earnings: ride.net_earnings ? Number(ride.net_earnings) : undefined,
-        distance_km: ride.distance_km ? Number(ride.distance_km) : undefined
+        created_at: ride.created_at,
+        started_at: ride.started_at,
+        completed_at: ride.completed_at
       }));
       
       setRides(ridesData);

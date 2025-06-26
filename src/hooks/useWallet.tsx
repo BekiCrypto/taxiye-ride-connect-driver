@@ -5,13 +5,13 @@ import { useDriverAuth } from './useDriverAuth';
 
 interface WalletTransaction {
   id: string;
-  driver_id: string;
+  driver_phone_ref: string;
   type: 'topup' | 'commission' | 'promo_credit' | 'admin_credit' | 'ride_earning';
   source?: 'telebirr' | 'stripe' | 'bank' | 'admin' | 'ride';
   amount: number;
   status: 'pending' | 'completed' | 'failed';
   description?: string;
-  created_at: string;
+  created_at: string | null;
 }
 
 export const useWallet = () => {
@@ -32,19 +32,22 @@ export const useWallet = () => {
     const { data, error } = await supabase
       .from('wallet_transactions')
       .select('*')
-      .eq('driver_id', driver.id)
+      .eq('driver_phone_ref', driver.phone)
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching transactions:', error);
     } else if (data) {
-      // Cast the data to ensure proper typing
+      // Map the data to ensure proper typing
       const transactionsData: WalletTransaction[] = data.map(transaction => ({
-        ...transaction,
+        id: transaction.id,
+        driver_phone_ref: transaction.driver_phone_ref,
         type: transaction.type as 'topup' | 'commission' | 'promo_credit' | 'admin_credit' | 'ride_earning',
         source: transaction.source as 'telebirr' | 'stripe' | 'bank' | 'admin' | 'ride' | undefined,
+        amount: Number(transaction.amount),
         status: transaction.status as 'pending' | 'completed' | 'failed',
-        amount: Number(transaction.amount)
+        description: transaction.description,
+        created_at: transaction.created_at
       }));
       setTransactions(transactionsData);
     }
@@ -62,7 +65,7 @@ export const useWallet = () => {
     const { data, error } = await supabase
       .from('wallet_transactions')
       .insert({
-        driver_id: driver.id,
+        driver_phone_ref: driver.phone,
         type,
         amount,
         source,
