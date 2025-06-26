@@ -36,16 +36,18 @@ export const useDriverAuth = () => {
       
       if (error) {
         console.error('Error getting session:', error);
-      } else {
-        console.log('Initial session:', !!session?.user);
+        setLoading(false);
+        return;
       }
       
+      console.log('Initial session:', !!session?.user);
       setUser(session?.user ?? null);
       
       if (session?.user) {
         await fetchDriverProfile(session.user.id);
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     getInitialSession();
@@ -59,8 +61,8 @@ export const useDriverAuth = () => {
         await fetchDriverProfile(session.user.id);
       } else {
         setDriver(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -68,41 +70,52 @@ export const useDriverAuth = () => {
 
   const fetchDriverProfile = async (userId: string) => {
     console.log('Fetching driver profile for user:', userId);
-    const { data, error } = await supabase
-      .from('drivers')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    
+    try {
+      const { data, error } = await supabase
+        .from('drivers')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
 
-    if (error) {
-      console.error('Error fetching driver profile:', error);
+      if (error) {
+        console.error('Error fetching driver profile:', error);
+        if (error.code === 'PGRST116') {
+          console.log('No driver profile found for user:', userId);
+        }
+        setDriver(null);
+      } else if (data) {
+        console.log('Driver profile fetched:', data);
+        // Create driver object with proper typing
+        const driverData: Driver = {
+          phone: data.phone,
+          user_id: data.user_id,
+          name: data.name,
+          email: data.email,
+          license_number: data.license_number,
+          vehicle_model: data.vehicle_model,
+          vehicle_color: data.vehicle_color,
+          plate_number: data.plate_number,
+          approved_status: data.approved_status as 'pending' | 'approved' | 'rejected',
+          wallet_balance: Number(data.wallet_balance || 0),
+          is_online: data.is_online || false,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          rejection_reason: data.rejection_reason,
+          admin_notes: data.admin_notes,
+          last_reviewed_at: data.last_reviewed_at,
+          reviewed_by: data.reviewed_by
+        };
+        setDriver(driverData);
+      } else {
+        console.log('No driver profile data returned');
+        setDriver(null);
+      }
+    } catch (err) {
+      console.error('Unexpected error fetching driver profile:', err);
       setDriver(null);
-    } else if (data) {
-      console.log('Driver profile fetched:', data);
-      // Create driver object with proper typing
-      const driverData: Driver = {
-        phone: data.phone,
-        user_id: data.user_id,
-        name: data.name,
-        email: data.email,
-        license_number: data.license_number,
-        vehicle_model: data.vehicle_model,
-        vehicle_color: data.vehicle_color,
-        plate_number: data.plate_number,
-        approved_status: data.approved_status as 'pending' | 'approved' | 'rejected',
-        wallet_balance: Number(data.wallet_balance || 0),
-        is_online: data.is_online || false,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        rejection_reason: data.rejection_reason,
-        admin_notes: data.admin_notes,
-        last_reviewed_at: data.last_reviewed_at,
-        reviewed_by: data.reviewed_by
-      };
-      setDriver(driverData);
-    } else {
-      console.log('No driver profile found');
-      setDriver(null);
+    } finally {
+      setLoading(false);
     }
   };
 
