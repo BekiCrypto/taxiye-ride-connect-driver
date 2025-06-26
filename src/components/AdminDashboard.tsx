@@ -55,7 +55,7 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
     const Component = selected.component;
     
-    // Handle components that need props
+    // Handle components that need specific props
     if (selectedComponent === 'dashboard') {
       return <Component onNavigate={(page: string) => {
         console.log('Navigation attempt to:', page);
@@ -68,13 +68,27 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
     }
 
     if (selectedComponent === 'kyc-upload') {
-      return <Component onApproval={() => {
-        console.log('KYC approval completed in preview');
-        setSelectedComponent('dashboard');
-      }} />;
+      return <Component 
+        onApproval={() => {
+          console.log('KYC approval completed in preview');
+          setSelectedComponent('dashboard');
+        }} 
+      />;
     }
     
-    return <Component onNavigate={() => {}} />;
+    // For components that need onNavigate prop
+    if (['profile', 'wallet', 'support', 'ride-request', 'active-trip', 'trip-summary', 'sos'].includes(selectedComponent)) {
+      return <Component onNavigate={(page: string) => {
+        console.log('Navigation attempt to:', page);
+        const targetComponent = components.find(c => c.name.toLowerCase().includes(page.toLowerCase()));
+        if (targetComponent) {
+          setSelectedComponent(targetComponent.id);
+        }
+      }} />;
+    }
+
+    // For login component, no props needed
+    return <Component />;
   };
 
   return (
