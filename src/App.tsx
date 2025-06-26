@@ -60,25 +60,36 @@ const AppContent = () => {
     );
   }
 
-  // If user is authenticated but no driver profile or not approved, show KYC
-  if (user && (!driver || driver.approved_status !== 'approved')) {
-    console.log('Driver profile missing or not approved, showing KYC:', {
-      hasDriver: !!driver,
-      status: driver?.approved_status
-    });
+  // If user is authenticated but no driver profile exists, show KYC to create one
+  if (user && !driver) {
+    console.log('User authenticated but no driver profile found, showing KYC');
     return (
       <KYCUpload 
         onApproval={() => {
           console.log('KYC approval completed, refreshing driver profile');
-          // The useDriverAuth hook will automatically refresh and detect the approval
           window.location.reload();
         }} 
       />
     );
   }
 
-  // Default to login page (this is now the primary landing page)
-  console.log('No user authenticated or requirements not met, showing login');
+  // If user has driver profile but not approved, show KYC
+  if (user && driver && driver.approved_status !== 'approved') {
+    console.log('Driver profile exists but not approved, showing KYC:', {
+      status: driver.approved_status
+    });
+    return (
+      <KYCUpload 
+        onApproval={() => {
+          console.log('KYC approval completed, refreshing driver profile');
+          window.location.reload();
+        }} 
+      />
+    );
+  }
+
+  // Default to login page for fresh start
+  console.log('No authenticated user or driver profile, showing login');
   return <Login />;
 };
 

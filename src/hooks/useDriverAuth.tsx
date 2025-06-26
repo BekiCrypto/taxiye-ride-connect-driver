@@ -34,7 +34,7 @@ export const useDriverAuth = () => {
         if (isMounted) {
           if (session?.user) {
             setUser(session.user);
-            // Fetch driver profile
+            // Always attempt to fetch driver profile for authenticated users
             await handleFetchDriverProfile(session.user.id);
           } else {
             setUser(null);
@@ -62,6 +62,7 @@ export const useDriverAuth = () => {
 
       if (session?.user) {
         setUser(session.user);
+        // Always attempt to fetch driver profile for authenticated users
         await handleFetchDriverProfile(session.user.id);
       } else {
         setUser(null);
@@ -78,15 +79,17 @@ export const useDriverAuth = () => {
 
   const handleFetchDriverProfile = async (userId: string) => {
     try {
-      console.log('Starting to fetch driver profile for:', userId);
+      console.log('Fetching driver profile for user:', userId);
       const driverData = await fetchDriverProfile(userId);
-      console.log('Driver profile fetch result:', driverData);
-      setDriver(driverData); // This will be null if no profile exists
+      console.log('Driver profile result:', driverData ? 'Found' : 'Not found');
+      
+      // Set driver data (will be null if no driver profile exists)
+      setDriver(driverData);
     } catch (err) {
-      console.error('Error in handleFetchDriverProfile:', err);
+      console.error('Error fetching driver profile:', err);
       setDriver(null);
     } finally {
-      console.log('Setting loading to false after driver profile fetch');
+      console.log('Setting loading to false');
       setLoading(false);
     }
   };
