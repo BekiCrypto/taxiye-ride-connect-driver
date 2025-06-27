@@ -70,7 +70,7 @@ export const useRides = () => {
           pickup_location: ride.pickup_location,
           dropoff_location: ride.dropoff_location,
           distance_km: ride.distance_km ? Number(ride.distance_km) : undefined,
-          status: ride.status as 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled',
+          status: ride.status as Ride['status'],
           fare: ride.fare ? Number(ride.fare) : undefined,
           commission: ride.commission ? Number(ride.commission) : undefined,
           net_earnings: ride.net_earnings ? Number(ride.net_earnings) : undefined,
