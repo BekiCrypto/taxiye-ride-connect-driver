@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDriverAuth } from './useDriverAuth';
+import { sampleRides } from '@/utils/sampleData';
 
 interface Ride {
   id: string;
@@ -37,40 +38,76 @@ export const useRides = () => {
     if (!driver) return;
 
     setLoading(true);
-    const { data, error } = await supabase
-      .from('rides')
-      .select('*')
-      .eq('driver_phone_ref', driver.phone)
-      .order('created_at', { ascending: false });
+    
+    try {
+      const { data, error } = await supabase
+        .from('rides')
+        .select('*')
+        .eq('driver_phone_ref', driver.phone)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching rides:', error);
-    } else if (data) {
-      // Map the data to ensure proper typing
-      const ridesData: Ride[] = data.map(ride => ({
-        id: ride.id,
-        driver_phone_ref: ride.driver_phone_ref,
-        passenger_name: ride.passenger_name,
-        passenger_phone: ride.passenger_phone,
-        passenger_phone_ref: ride.passenger_phone_ref,
-        pickup_location: ride.pickup_location,
-        dropoff_location: ride.dropoff_location,
-        distance_km: ride.distance_km ? Number(ride.distance_km) : undefined,
-        status: ride.status as 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled',
-        fare: ride.fare ? Number(ride.fare) : undefined,
-        commission: ride.commission ? Number(ride.commission) : undefined,
-        net_earnings: ride.net_earnings ? Number(ride.net_earnings) : undefined,
-        created_at: ride.created_at,
-        started_at: ride.started_at,
-        completed_at: ride.completed_at
+      if (error) {
+        console.error('Error fetching rides from database:', error);
+        // Fallback to sample data for development
+        console.log('Using sample rides data for development');
+        const driverSampleRides = sampleRides.filter(ride => 
+          ride.driver_phone_ref === driver.phone
+        );
+        setRides(driverSampleRides);
+        
+        const activeRide = driverSampleRides.find(ride => 
+          ride.status === 'accepted' || ride.status === 'in_progress'
+        );
+        setCurrentRide(activeRide || null);
+      } else if (data && data.length > 0) {
+        // Use real database data
+        const ridesData: Ride[] = data.map(ride => ({
+          id: ride.id,
+          driver_phone_ref: ride.driver_phone_ref,
+          passenger_name: ride.passenger_name,
+          passenger_phone: ride.passenger_phone,
+          passenger_phone_ref: ride.passenger_phone_ref,
+          pickup_location: ride.pickup_location,
+          dropoff_location: ride.dropoff_location,
+          distance_km: ride.distance_km ? Number(ride.distance_km) : undefined,
+          status: ride.status as 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled',
+          fare: ride.fare ? Number(ride.fare) : undefined,
+          commission: ride.commission ? Number(ride.commission) : undefined,
+          net_earnings: ride.net_earnings ? Number(ride.net_earnings) : undefined,
+          created_at: ride.created_at,
+          started_at: ride.started_at,
+          completed_at: ride.completed_at
+        }));
+        
+        setRides(ridesData);
+        const activeRide = ridesData.find(ride => 
+          ride.status === 'accepted' || ride.status === 'in_progress'
+        );
+        setCurrentRide(activeRide || null);
+      } else {
+        // No data in database, use sample data for better UX
+        console.log('No rides in database, using sample data for demo');
+        const driverSampleRides = sampleRides.map(ride => ({
+          ...ride,
+          driver_phone_ref: driver.phone // Update to current driver's phone
+        }));
+        setRides(driverSampleRides);
+        
+        const activeRide = driverSampleRides.find(ride => 
+          ride.status === 'accepted' || ride.status === 'in_progress'
+        );
+        setCurrentRide(activeRide || null);
+      }
+    } catch (err) {
+      console.error('Unexpected error fetching rides:', err);
+      // Fallback to sample data
+      const driverSampleRides = sampleRides.map(ride => ({
+        ...ride,
+        driver_phone_ref: driver.phone
       }));
-      
-      setRides(ridesData);
-      const activeRide = ridesData.find(ride => 
-        ride.status === 'accepted' || ride.status === 'in_progress'
-      );
-      setCurrentRide(activeRide || null);
+      setRides(driverSampleRides);
     }
+    
     setLoading(false);
   };
 

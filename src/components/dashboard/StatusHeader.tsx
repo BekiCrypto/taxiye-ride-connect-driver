@@ -1,66 +1,77 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { MapPin } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Card, CardContent } from '@/components/ui/card';
 import { useDriverAuth } from '@/hooks/useDriverAuth';
+import { Wifi, WifiOff, Clock } from 'lucide-react';
 
 const StatusHeader = () => {
-  const { driver, updateDriverProfile } = useDriverAuth();
-
-  const handleOnlineToggle = async (checked: boolean) => {
-    if (!driver) return;
-
-    const result = await updateDriverProfile({ is_online: checked });
-    if (result) {
-      toast({
-        title: checked ? "You're now online! 🚗" : "You're now offline",
-        description: checked ? "Ready to receive ride requests" : "You won't receive ride requests",
-      });
-    }
-  };
+  const { driver } = useDriverAuth();
 
   if (!driver) return null;
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved': return 'bg-green-500';
+      case 'pending': return 'bg-yellow-500';
+      case 'rejected': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'approved': return 'Active Driver';
+      case 'pending': return 'Pending Approval';
+      case 'rejected': return 'Application Rejected';
+      default: return 'Unknown Status';
+    }
+  };
+
   return (
-    <div className="relative">
-      <div className="absolute inset-0 bg-gradient-to-r from-green-600/20 to-blue-600/20 rounded-2xl blur-xl"></div>
-      <Card className="relative bg-gray-800/90 border-gray-700 backdrop-blur-sm">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
+    <Card className="bg-gray-800 border-gray-700">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className={`w-3 h-3 rounded-full ${getStatusColor(driver.approved_status)}`} />
             <div>
-              <h1 className="text-2xl font-bold text-white mb-1">Welcome back! 👋</h1>
-              <p className="text-gray-300 text-lg">{driver.name}</p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="text-right">
-                <div className="text-sm text-gray-400">Status</div>
-                <Badge className={`${driver.is_online ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'} text-white`}>
-                  {driver.is_online ? 'Online' : 'Offline'}
-                </Badge>
+              <div className="text-white font-medium">
+                {getStatusText(driver.approved_status)}
               </div>
-              <Switch
-                checked={driver.is_online}
-                onCheckedChange={handleOnlineToggle}
-                className="data-[state=checked]:bg-green-600"
-              />
-              <div className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                driver.is_online ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-gray-500'
-              }`} />
+              <div className="text-gray-400 text-sm">
+                Driver ID: {driver.phone.replace('DRV_', '')}
+              </div>
             </div>
           </div>
           
-          {driver.is_online && (
-            <div className="flex items-center space-x-2 text-green-400 animate-pulse">
-              <MapPin className="h-4 w-4" />
-              <span className="text-sm">Ready to receive ride requests</span>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              {driver.is_online ? (
+                <>
+                  <Wifi className="h-4 w-4 text-green-400" />
+                  <Badge className="bg-green-600/20 text-green-400">Online</Badge>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="h-4 w-4 text-gray-400" />
+                  <Badge className="bg-gray-600/20 text-gray-400">Offline</Badge>
+                </>
+              )}
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            
+            <div className="flex items-center space-x-2 text-gray-400">
+              <Clock className="h-4 w-4" />
+              <span className="text-sm">
+                {new Date().toLocaleTimeString('en-US', { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+              </span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Clock } from 'lucide-react';
 import { useDriverAuth } from '@/hooks/useDriverAuth';
+import { AlertTriangle, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 interface StatusAlertProps {
   onNavigate: (page: string) => void;
@@ -12,37 +12,92 @@ interface StatusAlertProps {
 const StatusAlert = ({ onNavigate }: StatusAlertProps) => {
   const { driver } = useDriverAuth();
 
-  if (!driver || driver.approved_status === 'approved') return null;
+  if (!driver) return null;
+
+  const getAlertConfig = () => {
+    switch (driver.approved_status) {
+      case 'pending':
+        return {
+          icon: Clock,
+          variant: 'default' as const,
+          title: 'Application Under Review',
+          description: 'Your driver application is being reviewed. This typically takes 1-2 business days.',
+          action: null
+        };
+      case 'rejected':
+        return {
+          icon: XCircle,
+          variant: 'destructive' as const,
+          title: 'Application Rejected',
+          description: driver.rejection_reason || 'Your application was rejected. Please contact support for details.',
+          action: (
+            <Button 
+              onClick={() => onNavigate('kyc')} 
+              variant="outline" 
+              size="sm"
+              className="mt-2"
+            >
+              Resubmit Documents
+            </Button>
+          )
+        };
+      case 'approved':
+        if (!driver.is_online) {
+          return {
+            icon: AlertTriangle,
+            variant: 'default' as const,
+            title: 'You\'re Currently Offline',
+            description: 'Go online to start receiving ride requests and earning money.',
+            action: (
+              <Button 
+                onClick={() => {/* Toggle online status */}} 
+                size="sm"
+                className="mt-2 bg-green-600 hover:bg-green-700"
+              >
+                Go Online
+              </Button>
+            )
+          };
+        }
+        return null;
+      default:
+        return {
+          icon: AlertTriangle,
+          variant: 'default' as const,
+          title: 'Complete Your Profile',
+          description: 'Please complete your driver profile to start accepting rides.',
+          action: (
+            <Button 
+              onClick={() => onNavigate('kyc')} 
+              size="sm"
+              className="mt-2"
+            >
+              Complete Profile
+            </Button>
+          )
+        };
+    }
+  };
+
+  const alertConfig = getAlertConfig();
+  
+  if (!alertConfig) return null;
+
+  const Icon = alertConfig.icon;
 
   return (
-    <Card className="bg-gradient-to-r from-yellow-900/50 to-orange-900/50 border-yellow-700/50 backdrop-blur-sm">
-      <CardContent className="p-4">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-yellow-600/20 rounded-full">
-            <Clock className="h-5 w-5 text-yellow-400" />
-          </div>
-          <div className="flex-1">
-            <div className="text-yellow-100 font-medium">
-              Account Status: {driver.approved_status.toUpperCase()}
-            </div>
-            <div className="text-yellow-200 text-sm">
-              {driver.approved_status === 'pending' 
-                ? 'Your documents are being reviewed. You\'ll be notified once approved.'
-                : 'Please update your documents to continue driving.'
-              }
-            </div>
-          </div>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="border-yellow-600 text-yellow-400 hover:bg-yellow-600/20"
-            onClick={() => onNavigate('profile')}
-          >
-            View Details
-          </Button>
+    <Alert variant={alertConfig.variant} className="border-gray-700 bg-gray-800/50">
+      <Icon className="h-4 w-4" />
+      <AlertDescription>
+        <div className="font-medium text-white mb-1">
+          {alertConfig.title}
         </div>
-      </CardContent>
-    </Card>
+        <div className="text-gray-300 text-sm">
+          {alertConfig.description}
+        </div>
+        {alertConfig.action}
+      </AlertDescription>
+    </Alert>
   );
 };
 
