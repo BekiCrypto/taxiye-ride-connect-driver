@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDriverAuth } from './useDriverAuth';
-import { sampleWalletTransactions } from '@/utils/sampleData';
 
 interface WalletTransaction {
   id: string;
@@ -30,55 +29,28 @@ export const useWallet = () => {
     if (!driver) return;
 
     setLoading(true);
-    
-    try {
-      const { data, error } = await supabase
-        .from('wallet_transactions')
-        .select('*')
-        .eq('driver_phone_ref', driver.phone)
-        .order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('wallet_transactions')
+      .select('*')
+      .eq('driver_phone_ref', driver.phone)
+      .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching transactions from database:', error);
-        // Fallback to sample data for development
-        console.log('Using sample wallet transactions for demo');
-        const driverSampleTransactions = sampleWalletTransactions.map(txn => ({
-          ...txn,
-          driver_phone_ref: driver.phone
-        }));
-        setTransactions(driverSampleTransactions);
-      } else if (data && data.length > 0) {
-        // Use real database data
-        const transactionsData: WalletTransaction[] = data.map(transaction => ({
-          id: transaction.id,
-          driver_phone_ref: transaction.driver_phone_ref,
-          type: transaction.type as 'topup' | 'commission' | 'promo_credit' | 'admin_credit' | 'ride_earning',
-          source: transaction.source as 'telebirr' | 'stripe' | 'bank' | 'admin' | 'ride' | undefined,
-          amount: Number(transaction.amount),
-          status: transaction.status as 'pending' | 'completed' | 'failed',
-          description: transaction.description,
-          created_at: transaction.created_at
-        }));
-        setTransactions(transactionsData);
-      } else {
-        // No data in database, use sample data for better UX
-        console.log('No transactions in database, using sample data for demo');
-        const driverSampleTransactions = sampleWalletTransactions.map(txn => ({
-          ...txn,
-          driver_phone_ref: driver.phone
-        }));
-        setTransactions(driverSampleTransactions);
-      }
-    } catch (err) {
-      console.error('Unexpected error fetching transactions:', err);
-      // Fallback to sample data
-      const driverSampleTransactions = sampleWalletTransactions.map(txn => ({
-        ...txn,
-        driver_phone_ref: driver.phone
+    if (error) {
+      console.error('Error fetching transactions:', error);
+    } else if (data) {
+      // Map the data to ensure proper typing
+      const transactionsData: WalletTransaction[] = data.map(transaction => ({
+        id: transaction.id,
+        driver_phone_ref: transaction.driver_phone_ref,
+        type: transaction.type as 'topup' | 'commission' | 'promo_credit' | 'admin_credit' | 'ride_earning',
+        source: transaction.source as 'telebirr' | 'stripe' | 'bank' | 'admin' | 'ride' | undefined,
+        amount: Number(transaction.amount),
+        status: transaction.status as 'pending' | 'completed' | 'failed',
+        description: transaction.description,
+        created_at: transaction.created_at
       }));
-      setTransactions(driverSampleTransactions);
+      setTransactions(transactionsData);
     }
-    
     setLoading(false);
   };
 

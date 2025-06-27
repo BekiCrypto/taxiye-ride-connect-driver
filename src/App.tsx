@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -30,79 +29,63 @@ const AppContent = () => {
     driverStatus: driver?.approved_status 
   });
 
-  // Check if we're on the reset password route - this should be accessible without authentication
-  const isResetPasswordRoute = window.location.pathname === '/reset-password';
-
-  // Show loading screen while checking authentication (except for reset password route)
-  if ((loading || adminLoading) && !isResetPasswordRoute) {
+  // Show loading screen while checking authentication
+  if (loading || adminLoading) {
     console.log('Showing splash screen - loading states:', { loading, adminLoading });
     return <SplashScreen />;
   }
 
-  // Always render the full router structure to handle all routes properly
+  // Check for admin access first (if URL indicates admin)
+  if (window.location.pathname === '/admin' || window.location.search.includes('admin=true')) {
+    if (isAdmin) {
+      console.log('Admin logged in, showing dashboard');
+      return <AdminDashboard onLogout={adminLogout} />;
+    }
+    console.log('Admin login page requested');
+    return <AdminLogin onLogin={adminLogin} />;
+  }
+
+  // If admin is logged in but not on admin route, show admin dashboard
+  if (isAdmin) {
+    console.log('Admin logged in, showing dashboard');
+    return <AdminDashboard onLogout={adminLogout} />;
+  }
+
+  // START → SIGNIN/SIGNUP → IF APPROVED → HOME, IF NOT → KYC PAGE
+
+  // Step 1: If no user, show login/signup
+  if (!user) {
+    console.log('No authenticated user, showing login');
+    return <Login />;
+  }
+
+  // Step 2: User is authenticated, check if they have driver profile and approval status
+  if (user && driver && driver.approved_status === 'approved') {
+    // User is approved → Go to Home
+    console.log('Driver is approved, showing main dashboard');
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/*" element={<Index />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    );
+  }
+
+  // Step 3: User is authenticated but either no driver profile OR not approved → Go to KYC
+  console.log('User authenticated but needs KYC:', {
+    hasDriver: !!driver,
+    status: driver?.approved_status || 'no profile'
+  });
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Reset password route - accessible without authentication */}
-        <Route path="/reset-password" element={<ResetPassword />} />
-        
-        {/* Admin routes */}
-        <Route path="/admin" element={
-          isAdmin ? <AdminDashboard onLogout={adminLogout} /> : <AdminLogin onLogin={adminLogin} />
-        } />
-        
-        {/* Main app routes */}
-        <Route path="/*" element={
-          (() => {
-            // Check for admin access first (if URL indicates admin)
-            if (window.location.search.includes('admin=true')) {
-              if (isAdmin) {
-                console.log('Admin logged in, showing dashboard');
-                return <AdminDashboard onLogout={adminLogout} />;
-              }
-              console.log('Admin login page requested');
-              return <AdminLogin onLogin={adminLogin} />;
-            }
-
-            // If admin is logged in but not on admin route, show admin dashboard
-            if (isAdmin) {
-              console.log('Admin logged in, showing dashboard');
-              return <AdminDashboard onLogout={adminLogout} />;
-            }
-
-            // If no user, show login/signup
-            if (!user) {
-              console.log('No authenticated user, showing login');
-              return <Login />;
-            }
-
-            // User is authenticated, check if they have driver profile and approval status
-            if (user && driver && driver.approved_status === 'approved') {
-              // User is approved → Go to Home
-              console.log('Driver is approved, showing main dashboard');
-              return <Index />;
-            }
-
-            // User is authenticated but either no driver profile OR not approved → Go to KYC
-            console.log('User authenticated but needs KYC:', {
-              hasDriver: !!driver,
-              status: driver?.approved_status || 'no profile'
-            });
-            return (
-              <KYCUpload 
-                onApproval={() => {
-                  console.log('KYC approval completed, refreshing driver profile');
-                  window.location.reload();
-                }} 
-              />
-            );
-          })()
-        } />
-        
-        {/* 404 route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    <KYCUpload 
+      onApproval={() => {
+        console.log('KYC approval completed, refreshing driver profile');
+        window.location.reload();
+      }} 
+    />
   );
 };
 

@@ -2,62 +2,51 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Navigation } from 'lucide-react';
 import { useDriverAuth } from '@/hooks/useDriverAuth';
-import { Car, Palette, Hash } from 'lucide-react';
 
 const VehicleInfo = () => {
   const { driver } = useDriverAuth();
 
-  if (!driver || driver.approved_status !== 'approved') return null;
-
-  const hasVehicleInfo = driver.vehicle_model || driver.vehicle_color || driver.plate_number;
-
-  if (!hasVehicleInfo) return null;
+  if (!driver || !driver.vehicle_model) return null;
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
-      <CardHeader>
-        <CardTitle className="text-white flex items-center space-x-2">
-          <Car className="h-5 w-5" />
-          <span>Vehicle Information</span>
+    <Card className="bg-gray-800/60 border-gray-700/50 backdrop-blur-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-white flex items-center text-lg">
+          <div className="p-2 bg-gray-700/50 rounded-lg mr-3">
+            <Navigation className="h-5 w-5 text-gray-300" />
+          </div>
+          Vehicle Information
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {driver.vehicle_model && (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 text-gray-300">
-              <Car className="h-4 w-4" />
-              <span>Model</span>
+      <CardContent className="pt-0">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center py-2">
+              <span className="text-gray-400 text-sm">Model</span>
+              <span className="text-white font-medium">{driver.vehicle_model}</span>
             </div>
-            <Badge variant="secondary" className="bg-gray-700 text-white">
-              {driver.vehicle_model}
-            </Badge>
-          </div>
-        )}
-        
-        {driver.vehicle_color && (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 text-gray-300">
-              <Palette className="h-4 w-4" />
-              <span>Color</span>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-gray-400 text-sm">Color</span>
+              <span className="text-white font-medium">{driver.vehicle_color || 'White'}</span>
             </div>
-            <Badge variant="secondary" className="bg-gray-700 text-white">
-              {driver.vehicle_color}
-            </Badge>
           </div>
-        )}
-        
-        {driver.plate_number && (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 text-gray-300">
-              <Hash className="h-4 w-4" />
-              <span>Plate</span>
+          <div className="space-y-2">
+            {driver.plate_number && (
+              <div className="flex justify-between items-center py-2">
+                <span className="text-gray-400 text-sm">Plate</span>
+                <Badge className="bg-gray-700 text-white font-mono">
+                  {driver.plate_number}
+                </Badge>
+              </div>
+            )}
+            <div className="flex justify-between items-center py-2">
+              <span className="text-gray-400 text-sm">Status</span>
+              <Badge className="bg-green-600 text-white">Active</Badge>
             </div>
-            <Badge variant="secondary" className="bg-gray-700 text-white font-mono">
-              {driver.plate_number}
-            </Badge>
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );

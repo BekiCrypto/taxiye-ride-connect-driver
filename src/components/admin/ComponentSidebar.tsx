@@ -1,19 +1,16 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Eye } from 'lucide-react';
 
-interface ComponentItem {
+interface Component {
   id: string;
   name: string;
-  category: string;
-  status: 'completed' | 'in-progress' | 'pending';
-  description: string;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 interface ComponentSidebarProps {
-  components: ComponentItem[];
+  components: Component[];
   selectedComponent: string;
   setSelectedComponent: (id: string) => void;
   previewMode: 'mobile' | 'desktop';
@@ -25,66 +22,45 @@ const ComponentSidebar = ({
   setSelectedComponent, 
   previewMode 
 }: ComponentSidebarProps) => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-600/20 text-green-400';
-      case 'in-progress': return 'bg-yellow-600/20 text-yellow-400';
-      case 'pending': return 'bg-gray-600/20 text-gray-400';
-      default: return 'bg-gray-600/20 text-gray-400';
-    }
-  };
-
-  const categories = [...new Set(components.map(c => c.category))];
-
   return (
-    <div className={`bg-gray-800 border-r border-gray-700 ${
-      previewMode === 'mobile' ? 'w-64' : 'w-80'
-    }`}>
-      <div className="p-4 border-b border-gray-700">
-        <h2 className="text-lg font-semibold text-white">Components</h2>
-        <p className="text-gray-400 text-sm">Review app components</p>
+    <div className="w-64 bg-gray-800 border-r border-gray-700 p-4 min-h-screen">
+      <h2 className="text-lg font-semibold mb-4 flex items-center">
+        <Eye className="h-5 w-5 mr-2" />
+        Components
+      </h2>
+      <div className="space-y-2">
+        {components.map((component) => {
+          const Icon = component.icon;
+          return (
+            <button
+              key={component.id}
+              onClick={() => setSelectedComponent(component.id)}
+              className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${
+                selectedComponent === component.id
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+              <span className="text-sm font-medium">{component.name}</span>
+            </button>
+          );
+        })}
       </div>
-      
-      <ScrollArea className="h-[calc(100vh-8rem)]">
-        <div className="p-4 space-y-4">
-          {categories.map(category => (
-            <div key={category}>
-              <h3 className="text-sm font-medium text-gray-300 mb-2 uppercase tracking-wide">
-                {category}
-              </h3>
-              <div className="space-y-2">
-                {components
-                  .filter(component => component.category === category)
-                  .map(component => (
-                    <Card
-                      key={component.id}
-                      className={`cursor-pointer transition-colors ${
-                        selectedComponent === component.id
-                          ? 'bg-purple-900/30 border-purple-600'
-                          : 'bg-gray-700/50 border-gray-600 hover:bg-gray-700'
-                      }`}
-                      onClick={() => setSelectedComponent(component.id)}
-                    >
-                      <CardContent className="p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-white text-sm">
-                            {component.name}
-                          </h4>
-                          <Badge className={getStatusColor(component.status)}>
-                            {component.status}
-                          </Badge>
-                        </div>
-                        <p className="text-gray-400 text-xs line-clamp-2">
-                          {component.description}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
-              </div>
-            </div>
-          ))}
+
+      <div className="mt-8 p-4 bg-gray-700 rounded-lg">
+        <h3 className="text-sm font-semibold mb-2">Quick Info</h3>
+        <div className="space-y-2 text-xs text-gray-400">
+          <div className="flex justify-between">
+            <span>Total Components:</span>
+            <Badge variant="outline" className="text-xs">{components.length}</Badge>
+          </div>
+          <div className="flex justify-between">
+            <span>Preview Mode:</span>
+            <Badge variant="outline" className="text-xs">{previewMode}</Badge>
+          </div>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 };
