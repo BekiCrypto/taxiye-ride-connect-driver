@@ -11,6 +11,15 @@ export interface AuthErrorInfo {
 export const getAuthErrorInfo = (error: AuthError | Error): AuthErrorInfo => {
   const message = error.message.toLowerCase();
 
+  // OTP/Email link expired or invalid
+  if (message.includes('otp_expired') || message.includes('email link is invalid') || message.includes('has expired')) {
+    return {
+      title: "Verification Link Expired",
+      description: "Your verification link has expired. Please request a new one to continue.",
+      isRetryable: true
+    };
+  }
+
   // Network and connection errors
   if (message.includes('network') || message.includes('fetch')) {
     return {
@@ -130,4 +139,33 @@ export const handleUnexpectedError = (error: Error, operation: string): void => 
     description: `Something went wrong while trying to ${operation}. Please try again.`,
     variant: "destructive"
   });
+};
+
+export const handleUrlError = (params: URLSearchParams): boolean => {
+  const error = params.get('error');
+  const errorDescription = params.get('error_description');
+  const errorCode = params.get('error_code');
+
+  if (error) {
+    console.error('URL Auth Error:', { error, errorCode, errorDescription });
+
+    if (error === 'access_denied' && errorCode === 'otp_expired') {
+      toast({
+        title: "Verification Link Expired",
+        description: "Your verification link has expired. Please try signing up again or request a new verification email.",
+        variant: "destructive"
+      });
+      return true;
+    }
+
+    // Handle other URL errors
+    toast({
+      title: "Authentication Error",
+      description: errorDescription || "An error occurred during authentication. Please try again.",
+      variant: "destructive"
+    });
+    return true;
+  }
+
+  return false;
 };

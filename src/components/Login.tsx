@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import AuthHeader from './auth/AuthHeader';
@@ -8,6 +8,7 @@ import AuthFormFields from './auth/AuthFormFields';
 import OTPInput from './auth/OTPInput';
 import ForgotPasswordForm from './auth/ForgotPasswordForm';
 import { useAuthHandlers } from './auth/useAuthHandlers';
+import { handleUrlError } from './auth/utils/errorUtils';
 
 const Login = () => {
   const [phone, setPhone] = useState('');
@@ -28,6 +29,17 @@ const Login = () => {
     handleForgotPassword,
     setGeneratedOtp
   } = useAuthHandlers();
+
+  // Handle URL parameters for auth errors (like expired OTP)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hasError = handleUrlError(params);
+    
+    if (hasError) {
+      // Clear the URL parameters after handling the error
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   const onSignIn = async () => {
     const success = await handleSignIn(phone, password);
@@ -146,7 +158,7 @@ const Login = () => {
             />
           )}
         </CardContent>
-      </Card>
+      </Cart>
     </div>
   );
 };

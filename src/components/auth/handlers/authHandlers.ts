@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { getDriverAuthEmail } from '../utils/phoneUtils';
-import { validateAuthInput } from '../utils/validationUtils';
+import { validateAuthInput, showValidationError } from '../utils/validationUtils';
 import { handleAuthError, handleNetworkError, handleUnexpectedError } from '../utils/errorUtils';
 
 export const handleSignIn = async (
@@ -11,15 +11,11 @@ export const handleSignIn = async (
   setLoading: (loading: boolean) => void
 ): Promise<boolean> => {
   console.log('Starting sign in process for phone:', phone);
-  
+
   // Validate input
   const validation = validateAuthInput(phone, password, undefined, undefined, 'signin');
   if (!validation.isValid) {
-    toast({
-      title: "Invalid Input",
-      description: validation.error,
-      variant: "destructive"
-    });
+    showValidationError(validation.error!);
     return false;
   }
 
@@ -27,11 +23,12 @@ export const handleSignIn = async (
 
   try {
     const authEmail = getDriverAuthEmail(phone);
+    
     console.log('Attempting sign in with auth email:', authEmail);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: authEmail,
-      password
+      password: password
     });
 
     if (error) {
@@ -48,15 +45,11 @@ export const handleSignIn = async (
       return true;
     }
 
-    // Shouldn't reach here, but handle just in case
-    toast({
-      title: "Sign In Failed",
-      description: "No user data received. Please try again.",
-      variant: "destructive"
-    });
     return false;
 
   } catch (error) {
+    console.error('Unexpected error during sign in:', error);
+    
     if (error instanceof Error) {
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         handleNetworkError(error, 'sign in');
@@ -64,10 +57,9 @@ export const handleSignIn = async (
         handleUnexpectedError(error, 'sign in');
       }
     } else {
-      console.error('Unknown error during sign in:', error);
       toast({
         title: "Sign In Failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: "Unable to sign in. Please try again.",
         variant: "destructive"
       });
     }
@@ -89,11 +81,7 @@ export const handleSignUp = async (
   // Validate input
   const validation = validateAuthInput(phone, password, name, email, 'signup');
   if (!validation.isValid) {
-    toast({
-      title: "Invalid Input",
-      description: validation.error,
-      variant: "destructive"
-    });
+    showValidationError(validation.error!);
     return false;
   }
 
@@ -101,16 +89,17 @@ export const handleSignUp = async (
 
   try {
     const authEmail = getDriverAuthEmail(phone);
+    
     console.log('Attempting sign up with auth email:', authEmail);
 
     const { data, error } = await supabase.auth.signUp({
       email: authEmail,
-      password,
+      password: password,
       options: {
         emailRedirectTo: `${window.location.origin}/`,
         data: {
-          name: name.trim(),
           phone: phone,
+          name: name ? name.trim() : 'Driver',
           email: email ? email.trim() : null,
           user_type: 'driver'
         }
@@ -124,38 +113,73 @@ export const handleSignUp = async (
 
     if (data.user) {
       console.log('Sign up successful:', data.user.id);
-      toast({
-        title: "Account Created Successfully!",
-        description: "Welcome to Taxiye! Redirecting to document upload...",
-      });
+      
+      if (data.user.email_confirmed_at) {
+        toast({
+          title: "Welcome to Taxiye!",
+          description: "Account created successfully. Redirecting to document upload...",
+        });
+      } else {
+        toast({
+          title: "Account Created!",
+          description: "Please check your email and click the confirmation link to complete registration.",
+        });
+      }
       return true;
     }
 
-    // Handle case where no error but no user (shouldn't happen)
-    toast({
-      title: "Registration Failed",
-      description: "Account creation was incomplete. Please try again.",
-      variant: "destructive"
-    });
     return false;
 
   } catch (error) {
+    console.error('Unexpected error during sign up:', error);
+    
     if (error instanceof Error) {
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        handleNetworkError(error, 'create account');
+        handleNetworkError(error, 'sign up');
       } else {
-        handleUnexpectedError(error, 'create account');
+        handleUnexpectedError(error, 'sign up');
       }
     } else {
-      console.error('Unknown error during sign up:', error);
       toast({
-        title: "Registration Failed",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Sign Up Failed",
+        description: "Unable to create account. Please try again.",
         variant: "destructive"
       });
     }
     return false;
   } finally {
     setLoading(false);
+  }
+};
+
+export const handleResendConfirmation = async (phone: string): Promise<boolean> => {
+  console.log('Resending confirmation email for phone:', phone);
+  
+  try {
+    const authEmail = getDriverAuthEmail(phone);
+    
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: authEmail,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`
+      }
+    });
+
+    if (error) {
+      handleAuthError(error, 'resend confirmation');
+      return false;
+    }
+
+    toast({
+      title: "Confirmation Email Sent",
+      description: "A new confirmation email has been sent. Please check your inbox.",
+    });
+    return true;
+
+  } catch (error) {
+    console.error('Error resending confirmation:', error);
+    handleUnexpectedError(error as Error, 'resend confirmation email');
+    return false;
   }
 };
