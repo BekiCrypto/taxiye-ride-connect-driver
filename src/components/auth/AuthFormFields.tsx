@@ -45,11 +45,11 @@ const AuthFormFields = ({
 
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">
-          Phone Number *
+          {mode === 'signin' ? 'Phone Number or Email *' : 'Phone Number *'}
         </label>
         <Input
-          type="tel"
-          placeholder="Enter your phone number"
+          type={mode === 'signin' ? 'text' : 'tel'}
+          placeholder={mode === 'signin' ? 'Enter your phone number or email' : 'Enter your phone number'}
           value={phone}
           onChange={(e) => onPhoneChange(e.target.value)}
           className="bg-gray-700 border-gray-600 text-white"

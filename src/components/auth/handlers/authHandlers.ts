@@ -2,29 +2,53 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { getDriverAuthEmail } from '../utils/phoneUtils';
-import { validateAuthInput, showValidationError } from '../utils/validationUtils';
+import { validateAuthInput, showValidationError, validateEmailFormat } from '../utils/validationUtils';
 import { handleAuthError, handleNetworkError, handleUnexpectedError } from '../utils/errorUtils';
 
+// Helper function to detect if input is email or phone
+const isEmailInput = (input: string): boolean => {
+  return validateEmailFormat(input);
+};
+
 export const handleSignIn = async (
-  phone: string, 
+  phoneOrEmail: string, 
   password: string, 
   setLoading: (loading: boolean) => void
 ): Promise<boolean> => {
-  console.log('Starting sign in process for phone:', phone);
+  console.log('Starting sign in process for input:', phoneOrEmail);
 
-  // Validate input
-  const validation = validateAuthInput(phone, password, undefined, undefined, 'signin');
-  if (!validation.isValid) {
-    showValidationError(validation.error!);
+  // Validate basic input requirements
+  if (!phoneOrEmail?.trim()) {
+    showValidationError("Phone number or email is required");
+    return false;
+  }
+
+  if (!password?.trim()) {
+    showValidationError("Password is required");
     return false;
   }
 
   setLoading(true);
 
   try {
-    const authEmail = getDriverAuthEmail(phone);
+    let authEmail: string;
     
-    console.log('Attempting sign in with auth email:', authEmail);
+    // Detect if input is email or phone
+    if (isEmailInput(phoneOrEmail)) {
+      // Direct email sign-in
+      authEmail = phoneOrEmail.trim();
+      console.log('Attempting sign in with direct email:', authEmail);
+    } else {
+      // Phone number sign-in - convert to driver auth email
+      const validation = validateAuthInput(phoneOrEmail, password, undefined, undefined, 'signin');
+      if (!validation.isValid) {
+        showValidationError(validation.error!);
+        return false;
+      }
+      
+      authEmail = getDriverAuthEmail(phoneOrEmail);
+      console.log('Attempting sign in with driver auth email for phone:', phoneOrEmail);
+    }
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: authEmail,
@@ -38,6 +62,17 @@ export const handleSignIn = async (
 
     if (data.user) {
       console.log('Sign in successful:', data.user.id);
+      
+      // Check if user has confirmed email
+      if (!data.user.email_confirmed_at) {
+        toast({
+          title: "Email Confirmation Required",
+          description: "Please check your email and click the confirmation link to complete sign in.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
       toast({
         title: "Welcome back!",
         description: "You have been signed in successfully",

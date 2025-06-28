@@ -41,6 +41,7 @@ const Login = () => {
   }, []);
 
   const onSignIn = async () => {
+    // For sign in, use phone field which now accepts both phone and email
     const success = await handleSignIn(phone, password);
     // Success handling is done in the auth hook via toast and auth state change
   };
