@@ -18,7 +18,7 @@ export const useKYCActions = (
   setShowAIVerification: (show: boolean) => void,
   onApproval: () => void
 ) => {
-  const { uploadDocument } = useDocumentUpload();
+  const { uploadDocument, resetUpload } = useDocumentUpload();
   const { startAIVerification, submitForManualReview } = useAIVerification();
 
   const missingDocs = documents.filter(doc => 
@@ -29,51 +29,90 @@ export const useKYCActions = (
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!validateFile(file)) return;
+    console.log(`Processing file upload for ${currentUploadType}:`, {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type
+    });
 
-    console.log(`Uploading ${currentUploadType}:`, file.name);
+    // Reset any previous failed upload for this type
+    if (uploads[currentUploadType]?.status === 'failed') {
+      resetUpload(currentUploadType);
+    }
+
+    if (!validateFile(file)) {
+      console.log('File validation failed');
+      return;
+    }
+
+    console.log(`Starting upload for ${currentUploadType}:`, file.name);
+    
     const success = await uploadDocument(currentUploadType, file);
     
     if (success) {
-      toast({
-        title: "Upload Successful! ✅",
-        description: `${documents.find(d => d.key === currentUploadType)?.label} uploaded successfully`,
-      });
+      const docLabel = documents.find(d => d.key === currentUploadType)?.label || currentUploadType;
+      console.log(`Upload successful for ${currentUploadType}`);
+    } else {
+      console.log(`Upload failed for ${currentUploadType}`);
     }
     
+    // Clear the input value to allow re-uploading the same file
     event.target.value = '';
   };
 
   const takeSelfie = async (videoRef: React.RefObject<HTMLVideoElement>, setShowCamera: (show: boolean) => void) => {
-    if (!videoRef.current) return;
+    if (!videoRef.current) {
+      console.error('Video reference not available for selfie capture');
+      return;
+    }
 
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    
-    context?.drawImage(videoRef.current, 0, 0);
-    
-    canvas.toBlob(async (blob) => {
-      if (blob) {
-        const file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
-        console.log('Uploading live selfie...');
-        const success = await uploadDocument('selfie', file);
-        
-        if (success) {
+    try {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      
+      if (!context) {
+        throw new Error('Unable to create canvas context for selfie');
+      }
+      
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      
+      context.drawImage(videoRef.current, 0, 0);
+      
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          const file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
+          console.log('Capturing selfie...', { fileSize: file.size });
+          
+          const success = await uploadDocument('selfie', file);
+          
+          if (success) {
+            console.log('Selfie upload successful');
+          }
+        } else {
+          console.error('Failed to create blob from canvas');
           toast({
-            title: "Selfie Captured! 📸",
-            description: "Your selfie has been uploaded successfully",
+            title: "Selfie Capture Failed",
+            description: "Unable to process the captured image. Please try again.",
+            variant: "destructive"
           });
         }
         
         setShowCamera(false);
         
+        // Stop camera stream
         const stream = videoRef.current?.srcObject as MediaStream;
         stream?.getTracks().forEach(track => track.stop());
-      }
-    }, 'image/jpeg', 0.8);
+      }, 'image/jpeg', 0.8);
+    } catch (error) {
+      console.error('Error capturing selfie:', error);
+      toast({
+        title: "Selfie Capture Failed",
+        description: "Unable to capture selfie. Please try again.",
+        variant: "destructive"
+      });
+      setShowCamera(false);
+    }
   };
 
   const handleAIVerification = async () => {

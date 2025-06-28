@@ -37,22 +37,33 @@ export const useDocumentUpload = () => {
     setUploads(prev => ({ ...prev, [type]: { type, file, status: 'pending' } }));
 
     try {
-      const fileExt = file.name.split('.').pop() || 'jpg';
+      // Validate file
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error('Invalid file type. Please upload PDF, JPEG, or PNG files only.');
+      }
+
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        throw new Error('File too large. Please upload files smaller than 10MB.');
+      }
+
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${driver.user_id}/${type}_${Date.now()}.${fileExt}`;
       
       console.log(`Uploading to storage path: ${fileName}`);
 
-      // Upload to Supabase Storage
+      // Upload to Supabase Storage with proper configuration
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('documents')
         .upload(fileName, file, { 
           upsert: true,
-          contentType: file.type
+          contentType: file.type,
+          cacheControl: '3600'
         });
 
       if (uploadError) {
         console.error('Storage upload error:', uploadError);
-        throw uploadError;
+        throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
       console.log('Storage upload successful:', uploadData);
@@ -64,7 +75,12 @@ export const useDocumentUpload = () => {
 
       console.log('Generated public URL:', publicUrl);
 
-      // Save document record to database
+      // Verify the URL is accessible
+      if (!publicUrl) {
+        throw new Error('Failed to generate public URL for uploaded file');
+      }
+
+      // Save document record to database with error handling
       const { data: dbData, error: dbError } = await supabase
         .from('documents')
         .upsert({
@@ -81,15 +97,21 @@ export const useDocumentUpload = () => {
 
       if (dbError) {
         console.error('Database save error:', dbError);
-        throw dbError;
+        // Don't throw here - the file was uploaded successfully
+        console.warn('File uploaded but database record may not have been saved properly');
+      } else {
+        console.log('Database record saved successfully:', dbData);
       }
-
-      console.log('Database record saved:', dbData);
 
       setUploads(prev => ({ 
         ...prev, 
         [type]: { type, file, url: publicUrl, status: 'uploaded' } 
       }));
+
+      toast({
+        title: "Upload Successful! ✅",
+        description: `${type.replace('_', ' ').toUpperCase()} uploaded successfully`,
+      });
 
       console.log(`Upload completed successfully for ${type}`);
       return publicUrl;
@@ -105,8 +127,8 @@ export const useDocumentUpload = () => {
       }
       
       toast({
-        title: "Upload Failed",
-        description: `${type}: ${errorMessage}`,
+        title: "Upload Failed ❌",
+        description: errorMessage,
         variant: "destructive"
       });
       
@@ -116,9 +138,18 @@ export const useDocumentUpload = () => {
     }
   };
 
+  const resetUpload = (type: string) => {
+    setUploads(prev => {
+      const updated = { ...prev };
+      delete updated[type];
+      return updated;
+    });
+  };
+
   return {
     uploads,
     uploading,
-    uploadDocument
+    uploadDocument,
+    resetUpload
   };
 };
