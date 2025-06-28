@@ -39,7 +39,10 @@ export const useAuthHandlers = () => {
   // Helper function to get the driver-specific auth email
   const getDriverAuthEmail = (phone: string) => {
     const cleanPhone = phone.replace(/\D/g, '');
-    return `${cleanPhone}@driver.taxiye.com`;
+    // Remove leading zeros and ensure we have a valid format
+    const normalizedPhone = cleanPhone.replace(/^0+/, '');
+    // Add a prefix to make it a valid email format
+    return `driver${normalizedPhone}@taxiye.com`;
   };
 
   const handleSignIn = async (phone: string, password: string) => {
@@ -65,7 +68,7 @@ export const useAuthHandlers = () => {
     
     const authEmail = getDriverAuthEmail(phone);
 
-    console.log('Attempting sign in with phone:', phone);
+    console.log('Attempting sign in with phone:', phone, 'using auth email:', authEmail);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: authEmail,
@@ -121,7 +124,7 @@ export const useAuthHandlers = () => {
     
     const authEmail = getDriverAuthEmail(phone);
     
-    console.log('Attempting sign up with phone as primary key:', phone);
+    console.log('Attempting sign up with phone as primary key:', phone, 'using auth email:', authEmail);
 
     const { data, error } = await supabase.auth.signUp({
       email: authEmail,
@@ -226,7 +229,7 @@ export const useAuthHandlers = () => {
     const authEmail = getDriverAuthEmail(phone);
     const defaultPassword = 'taxiye123456';
 
-    console.log('Attempting OTP verification for phone:', phone);
+    console.log('Attempting OTP verification for phone:', phone, 'using auth email:', authEmail);
 
     if (mode === 'signin') {
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
