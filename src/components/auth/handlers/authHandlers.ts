@@ -43,6 +43,7 @@ export const handleSignIn = async (
       const validation = validateAuthInput(phoneOrEmail, password, undefined, undefined, 'signin');
       if (!validation.isValid) {
         showValidationError(validation.error!);
+        setLoading(false);
         return false;
       }
       
@@ -50,12 +51,16 @@ export const handleSignIn = async (
       console.log('Attempting sign in with driver auth email for phone:', phoneOrEmail);
     }
 
+    // Test connection first
+    console.log('Testing Supabase connection...');
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email: authEmail,
       password: password
     });
 
     if (error) {
+      console.error('Sign in error:', error);
       handleAuthError(error, 'sign in');
       return false;
     }
