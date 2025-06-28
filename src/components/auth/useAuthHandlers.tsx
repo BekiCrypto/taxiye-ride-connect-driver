@@ -8,20 +8,20 @@ export const useAuthHandlers = () => {
   const [loading, setLoading] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState('');
 
-  const signIn = (phone: string, password: string) => 
-    handleSignIn(phone, password, setLoading);
+  const signIn = async (phone: string, password: string): Promise<boolean> => 
+    await handleSignIn(phone, password, setLoading);
 
-  const signUp = (phone: string, password: string, name: string, email: string) => 
-    handleSignUp(phone, password, name, email, setLoading);
+  const signUp = async (phone: string, password: string, name: string, email: string): Promise<boolean> => 
+    await handleSignUp(phone, password, name, email, setLoading);
 
-  const sendOTP = (phone: string, email: string, mode: 'signin' | 'signup') => 
-    handleSendOTP(phone, email, mode, setLoading, setGeneratedOtp);
+  const sendOTP = async (phone: string, email: string, mode: 'signin' | 'signup'): Promise<boolean> => 
+    await handleSendOTP(phone, email, mode, setLoading, setGeneratedOtp);
 
-  const verifyOTP = (otp: string, phone: string, email: string, name: string, mode: 'signin' | 'signup') => 
-    handleVerifyOTP(otp, phone, email, name, mode, generatedOtp, setLoading);
+  const verifyOTP = async (otp: string, phone: string, email: string, name: string, mode: 'signin' | 'signup'): Promise<boolean> => 
+    await handleVerifyOTP(otp, phone, email, name, mode, generatedOtp, setLoading);
 
-  const forgotPassword = (resetEmail: string) => 
-    handleForgotPassword(resetEmail, setLoading);
+  const forgotPassword = async (resetEmail: string): Promise<boolean> => 
+    await handleForgotPassword(resetEmail, setLoading);
 
   return {
     loading,

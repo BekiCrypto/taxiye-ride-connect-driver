@@ -1,10 +1,17 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
-import { validateEmail } from '../utils/phoneUtils';
+import { validateEmailFormat } from '../utils/validationUtils';
+import { handleAuthError, handleNetworkError, handleUnexpectedError } from '../utils/errorUtils';
 
-export const handleForgotPassword = async (resetEmail: string, setLoading: (loading: boolean) => void) => {
-  if (!resetEmail) {
+export const handleForgotPassword = async (
+  resetEmail: string, 
+  setLoading: (loading: boolean) => void
+): Promise<boolean> => {
+  console.log('Starting password reset for email:', resetEmail);
+
+  // Validate email input
+  if (!resetEmail?.trim()) {
     toast({
       title: "Email Required",
       description: "Please enter your email address to reset password",
@@ -13,7 +20,7 @@ export const handleForgotPassword = async (resetEmail: string, setLoading: (load
     return false;
   }
 
-  if (!validateEmail(resetEmail)) {
+  if (!validateEmailFormat(resetEmail)) {
     toast({
       title: "Invalid Email",
       description: "Please enter a valid email address",
@@ -24,28 +31,44 @@ export const handleForgotPassword = async (resetEmail: string, setLoading: (load
 
   setLoading(true);
   
-  console.log('Attempting password reset for email:', resetEmail);
-  console.log('Redirect URL will be:', `${window.location.origin}/reset-password`);
-  
-  const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-    redirectTo: `${window.location.origin}/reset-password`,
-  });
-
-  if (error) {
-    console.error('Password reset error:', error);
-    toast({
-      title: "Reset Failed",
-      description: `Error: ${error.message}. Please check if this email exists in our system.`,
-      variant: "destructive"
+  try {
+    console.log('Attempting password reset for email:', resetEmail);
+    console.log('Redirect URL will be:', `${window.location.origin}/reset-password`);
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
     });
-  } else {
+
+    if (error) {
+      handleAuthError(error, 'password reset');
+      return false;
+    }
+
     console.log('Password reset email sent successfully');
     toast({
       title: "Reset Email Sent",
       description: "Check your email for password reset instructions. If you don't see it, check your spam folder.",
     });
+    return true;
+
+  } catch (error) {
+    console.error('Unexpected error during password reset:', error);
+    
+    if (error instanceof Error) {
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        handleNetworkError(error, 'send reset email');
+      } else {
+        handleUnexpectedError(error, 'send reset email');
+      }
+    } else {
+      toast({
+        title: "Reset Failed",
+        description: "Unable to send reset email. Please try again.",
+        variant: "destructive"
+      });
+    }
+    return false;
+  } finally {
+    setLoading(false);
   }
-  
-  setLoading(false);
-  return !error;
 };

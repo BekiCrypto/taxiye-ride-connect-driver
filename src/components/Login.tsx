@@ -29,6 +29,16 @@ const Login = () => {
     setGeneratedOtp
   } = useAuthHandlers();
 
+  const onSignIn = async () => {
+    const success = await handleSignIn(phone, password);
+    // Success handling is done in the auth hook via toast and auth state change
+  };
+
+  const onSignUp = async () => {
+    const success = await handleSignUp(phone, password, name, email);
+    // Success handling is done in the auth hook via toast and auth state change
+  };
+
   const onSendOTP = async () => {
     const success = await handleSendOTP(phone, email, mode);
     if (success) {
@@ -40,6 +50,7 @@ const Login = () => {
     const success = await handleVerifyOTP(otp, phone, email, name, mode);
     if (success) {
       // Reset will happen automatically via auth state change
+      resetToAuth();
     }
   };
 
@@ -84,7 +95,7 @@ const Login = () => {
               />
 
               <Button 
-                onClick={mode === 'signin' ? () => handleSignIn(phone, password) : () => handleSignUp(phone, password, name, email)}
+                onClick={mode === 'signin' ? onSignIn : onSignUp}
                 className="w-full bg-green-600 hover:bg-green-700"
                 disabled={loading}
               >
