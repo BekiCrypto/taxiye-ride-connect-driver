@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { User, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -73,7 +72,7 @@ export const useDriverAuth = () => {
         setUser(session.user);
         
         // Special handling for SIGNED_UP event - user just registered
-        if (event === 'SIGNED_UP') {
+        if (event === 'SIGNED_UP' as AuthChangeEvent) {
           console.log('New user signed up, checking for driver profile creation...');
           // Give the database trigger time to create the driver profile
           setTimeout(async () => {
