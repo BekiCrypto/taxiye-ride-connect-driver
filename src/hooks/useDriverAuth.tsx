@@ -1,5 +1,6 @@
+
 import { useState, useEffect, useRef } from 'react';
-import { User } from '@supabase/supabase-js';
+import { User, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Driver } from '@/types/driver';
 import { fetchDriverProfile, updateDriverProfile } from '@/services/driverService';
@@ -63,7 +64,7 @@ export const useDriverAuth = () => {
     getInitialSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session) => {
       console.log('Auth state changed:', event, !!session?.user);
       
       if (!isMounted) return;
