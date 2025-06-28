@@ -13,11 +13,17 @@ export const useDriverAuth = () => {
   useEffect(() => {
     let isMounted = true;
 
-    // Get initial session
+    // Get initial session with timeout
     const getInitialSession = async () => {
       console.log('Getting initial session...');
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // Add timeout to prevent hanging
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Session fetch timeout')), 10000)
+        );
+        
+        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]) as any;
         
         if (error) {
           console.error('Error getting session:', error);
@@ -34,7 +40,7 @@ export const useDriverAuth = () => {
         if (isMounted) {
           if (session?.user) {
             setUser(session.user);
-            // Try to fetch driver profile, but don't let it hang the app
+            // Fetch driver profile with timeout protection
             await handleFetchDriverProfile(session.user.id);
           } else {
             setUser(null);
@@ -43,7 +49,7 @@ export const useDriverAuth = () => {
           }
         }
       } catch (err) {
-        console.error('Unexpected error getting session:', err);
+        console.error('Session fetch error or timeout:', err);
         if (isMounted) {
           setUser(null);
           setDriver(null);
@@ -62,7 +68,7 @@ export const useDriverAuth = () => {
 
       if (session?.user) {
         setUser(session.user);
-        // Try to fetch driver profile, but always resolve loading
+        // Fetch driver profile with timeout protection
         await handleFetchDriverProfile(session.user.id);
       } else {
         setUser(null);
@@ -80,14 +86,20 @@ export const useDriverAuth = () => {
   const handleFetchDriverProfile = async (userId: string) => {
     try {
       console.log('Fetching driver profile for user:', userId);
-      const driverData = await fetchDriverProfile(userId);
+      
+      // Add timeout protection for driver profile fetch
+      const profilePromise = fetchDriverProfile(userId);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Driver profile fetch timeout')), 8000)
+      );
+      
+      const driverData = await Promise.race([profilePromise, timeoutPromise]) as Driver | null;
       console.log('Driver profile result:', driverData ? 'Found' : 'Not found');
       
-      // Always set the driver data (null if no profile exists)
       setDriver(driverData);
     } catch (err) {
-      console.error('Error fetching driver profile:', err);
-      // Ensure we set null on error
+      console.error('Error fetching driver profile or timeout:', err);
+      // On error or timeout, set driver to null but don't block the app
       setDriver(null);
     } finally {
       // ALWAYS set loading to false to prevent infinite loading
@@ -99,16 +111,27 @@ export const useDriverAuth = () => {
   const handleUpdateDriverProfile = async (updates: Partial<Omit<Driver, 'phone' | 'user_id'>>) => {
     if (!driver) return null;
 
-    const updatedDriver = await updateDriverProfile(driver.phone, updates);
-    if (updatedDriver) {
-      setDriver(updatedDriver);
+    try {
+      const updatedDriver = await updateDriverProfile(driver.phone, updates);
+      if (updatedDriver) {
+        setDriver(updatedDriver);
+      }
+      return updatedDriver;
+    } catch (error) {
+      console.error('Error updating driver profile:', error);
+      return null;
     }
-    return updatedDriver;
   };
 
   const signOut = async () => {
     console.log('Signing out...');
-    await supabase.auth.signOut();
+    setLoading(true);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+    // Loading will be set to false by the auth state change listener
   };
 
   return {
