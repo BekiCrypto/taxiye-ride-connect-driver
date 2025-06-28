@@ -17,55 +17,96 @@ export const useDocumentUpload = () => {
   const [uploading, setUploading] = useState(false);
 
   const uploadDocument = async (type: string, file: File): Promise<string | null> => {
-    if (!driver) return null;
+    if (!driver) {
+      toast({
+        title: "Authentication Error",
+        description: "Please sign in to upload documents",
+        variant: "destructive"
+      });
+      return null;
+    }
+
+    console.log(`Starting upload for ${type}:`, {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      driverPhone: driver.phone
+    });
 
     setUploading(true);
     setUploads(prev => ({ ...prev, [type]: { type, file, status: 'pending' } }));
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${driver.user_id}/${type}.${fileExt}`;
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `${driver.user_id}/${type}_${Date.now()}.${fileExt}`;
       
-      const { data, error } = await supabase.storage
+      console.log(`Uploading to storage path: ${fileName}`);
+
+      // Upload to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('documents')
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, file, { 
+          upsert: true,
+          contentType: file.type
+        });
 
-      if (error) throw error;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw uploadError;
+      }
 
+      console.log('Storage upload successful:', uploadData);
+
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('documents')
         .getPublicUrl(fileName);
 
+      console.log('Generated public URL:', publicUrl);
+
       // Save document record to database
-      const { error: dbError } = await supabase
+      const { data: dbData, error: dbError } = await supabase
         .from('documents')
         .upsert({
           driver_phone_ref: driver.phone,
           type,
           file_url: publicUrl,
-          status: 'pending'
-        });
+          status: 'pending',
+          uploaded_at: new Date().toISOString()
+        }, {
+          onConflict: 'driver_phone_ref,type'
+        })
+        .select()
+        .single();
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('Database save error:', dbError);
+        throw dbError;
+      }
+
+      console.log('Database record saved:', dbData);
 
       setUploads(prev => ({ 
         ...prev, 
         [type]: { type, file, url: publicUrl, status: 'uploaded' } 
       }));
 
-      toast({
-        title: "Document Uploaded",
-        description: `${type} uploaded successfully`,
-      });
-
+      console.log(`Upload completed successfully for ${type}`);
       return publicUrl;
+
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error(`Upload failed for ${type}:`, error);
+      
       setUploads(prev => ({ ...prev, [type]: { type, file, status: 'failed' } }));
+      
+      let errorMessage = "Failed to upload document";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       
       toast({
         title: "Upload Failed",
-        description: error instanceof Error ? error.message : "Failed to upload document",
+        description: `${type}: ${errorMessage}`,
         variant: "destructive"
       });
       
@@ -75,48 +116,9 @@ export const useDocumentUpload = () => {
     }
   };
 
-  const capturePhoto = async (type: string): Promise<string | null> => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      return new Promise((resolve) => {
-        const video = document.createElement('video');
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-
-        video.srcObject = stream;
-        video.play();
-
-        video.onloadedmetadata = () => {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          
-          setTimeout(() => {
-            context?.drawImage(video, 0, 0);
-            canvas.toBlob(async (blob) => {
-              if (blob) {
-                const file = new File([blob], `${type}.jpg`, { type: 'image/jpeg' });
-                const url = await uploadDocument(type, file);
-                resolve(url);
-              }
-              stream.getTracks().forEach(track => track.stop());
-            }, 'image/jpeg', 0.8);
-          }, 1000);
-        };
-      });
-    } catch (error) {
-      toast({
-        title: "Camera Access Denied",
-        description: "Please allow camera access to take a selfie",
-        variant: "destructive"
-      });
-      return null;
-    }
-  };
-
   return {
     uploads,
     uploading,
-    uploadDocument,
-    capturePhoto
+    uploadDocument
   };
 };

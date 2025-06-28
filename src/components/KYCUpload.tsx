@@ -14,6 +14,7 @@ import KYCCameraInterface from './kyc/KYCCameraInterface';
 import KYCAIVerificationInterface from './kyc/KYCAIVerificationInterface';
 import KYCDocumentList from './kyc/KYCDocumentList';
 import KYCActionButtons from './kyc/KYCActionButtons';
+import KYCSelfieOptions from './kyc/KYCSelfieOptions';
 
 interface KYCUploadProps {
   onApproval: () => void;
@@ -26,6 +27,7 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
   
   const [currentUploadType, setCurrentUploadType] = useState<string>('');
   const [showCamera, setShowCamera] = useState(false);
+  const [showSelfieOptions, setShowSelfieOptions] = useState(false);
   const [showAIVerification, setShowAIVerification] = useState(false);
   const [submittingForReview, setSubmittingForReview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -43,10 +45,14 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
     uploads[doc.key]?.status === 'uploaded'
   );
 
+  const missingDocs = documents.filter(doc => 
+    uploads[doc.key]?.status !== 'uploaded'
+  );
+
   const handleFileUpload = (docKey: string) => {
     setCurrentUploadType(docKey);
     if (docKey === 'selfie') {
-      setShowCamera(true);
+      setShowSelfieOptions(true);
     } else {
       fileInputRef.current?.click();
     }
@@ -75,8 +81,27 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
       return;
     }
 
-    await uploadDocument(currentUploadType, file);
+    console.log(`Uploading ${currentUploadType}:`, file.name);
+    const success = await uploadDocument(currentUploadType, file);
+    
+    if (success) {
+      toast({
+        title: "Upload Successful! ✅",
+        description: `${documents.find(d => d.key === currentUploadType)?.label} uploaded successfully`,
+      });
+    }
+    
     event.target.value = '';
+  };
+
+  const handleTakeLiveSelfie = () => {
+    setShowSelfieOptions(false);
+    setShowCamera(true);
+  };
+
+  const handleUploadSelfie = () => {
+    setShowSelfieOptions(false);
+    fileInputRef.current?.click();
   };
 
   const takeSelfie = async () => {
@@ -93,7 +118,16 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
     canvas.toBlob(async (blob) => {
       if (blob) {
         const file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
-        await uploadDocument('selfie', file);
+        console.log('Uploading live selfie...');
+        const success = await uploadDocument('selfie', file);
+        
+        if (success) {
+          toast({
+            title: "Selfie Captured! 📸",
+            description: "Your selfie has been uploaded successfully",
+          });
+        }
+        
         setShowCamera(false);
         
         const stream = videoRef.current?.srcObject as MediaStream;
@@ -110,9 +144,10 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
 
   const handleAIVerification = async () => {
     if (!allDocsUploaded) {
+      const missingDocNames = missingDocs.map(doc => doc.label).join(', ');
       toast({
-        title: "Upload Required",
-        description: "Please upload all required documents first",
+        title: "Missing Documents ⚠️",
+        description: `Please upload the following documents first: ${missingDocNames}`,
         variant: "destructive"
       });
       return;
@@ -128,9 +163,10 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
 
   const handleSubmitForApproval = async () => {
     if (!allDocsUploaded) {
+      const missingDocNames = missingDocs.map(doc => doc.label).join(', ');
       toast({
-        title: "Upload Required",
-        description: "Please upload all required documents first",
+        title: "Missing Documents ⚠️",
+        description: `Please upload these remaining documents before submitting: ${missingDocNames}`,
         variant: "destructive"
       });
       return;
@@ -158,10 +194,22 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
     return <KYCRejectionState driver={driver} />;
   }
 
+  // Show selfie options modal
+  if (showSelfieOptions) {
+    return (
+      <KYCSelfieOptions
+        onTakeLiveSelfie={handleTakeLiveSelfie}
+        onUploadPhoto={handleUploadSelfie}
+        onCancel={() => setShowSelfieOptions(false)}
+      />
+    );
+  }
+
   // Show camera interface
   if (showCamera) {
     return (
       <KYCCameraInterface 
+        videoRef={videoRef}
         onCapture={takeSelfie} 
         onCancel={cancelCamera}
       />
@@ -236,10 +284,24 @@ const KYCUpload = ({ onApproval }: KYCUploadProps) => {
             onUpload={handleFileUpload}
           />
 
+          {!allDocsUploaded && missingDocs.length > 0 && (
+            <Alert className="bg-orange-900/50 border-orange-700/50">
+              <AlertDescription className="text-orange-200">
+                <div className="font-medium mb-1">Missing Documents ({missingDocs.length}):</div>
+                <ul className="list-disc list-inside text-sm">
+                  {missingDocs.map(doc => (
+                    <li key={doc.key}>{doc.label}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <KYCActionButtons
             allDocsUploaded={allDocsUploaded}
             submittingForReview={submittingForReview}
             verifying={verifying}
+            missingDocsCount={missingDocs.length}
             onSubmitForApproval={handleSubmitForApproval}
             onAIVerification={handleAIVerification}
           />
