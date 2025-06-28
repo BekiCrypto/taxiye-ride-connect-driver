@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -76,14 +75,12 @@ const AppContent = () => {
   }
 
   // Step 3: User is authenticated but either no driver profile OR not approved → Go to KYC
-  // Pass the driver prop safely to KYCUpload
   console.log('User authenticated but needs KYC:', {
     hasDriver: !!driver,
     status: driver?.approved_status || 'no profile'
   });
   return (
     <KYCUpload 
-      driver={driver}
       onApproval={() => {
         console.log('KYC approval completed, refreshing driver profile');
         window.location.reload();
