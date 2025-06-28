@@ -52,42 +52,50 @@ const AppContent = () => {
     return <AdminDashboard onLogout={adminLogout} />;
   }
 
-  // Step 1: If no user, show login/signup
+  // Step 1: If no user is authenticated, show login/signup
   if (!user) {
     console.log('No authenticated user, showing login');
     return <Login />;
   }
 
   // Step 2: User is authenticated - check driver profile and approval status
-  if (driver && driver.approved_status === 'approved') {
-    // User is approved → Go to Home
-    console.log('Driver is approved, showing main dashboard');
+  if (driver) {
+    if (driver.approved_status === 'approved') {
+      // User is approved → Go to Home Dashboard
+      console.log('Driver is approved, showing main dashboard');
+      return (
+        <BrowserRouter>
+          <Routes>
+            <Route path="/*" element={<Index />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      );
+    } else {
+      // Driver exists but not approved (pending/rejected) → Go to KYC
+      console.log('Driver exists but not approved, showing KYC:', driver.approved_status);
+      return (
+        <KYCUpload 
+          onApproval={() => {
+            console.log('KYC approval completed, refreshing driver profile');
+            window.location.reload();
+          }} 
+        />
+      );
+    }
+  } else {
+    // Step 3: User is authenticated but no driver profile exists → Go to Document Verification (KYC)
+    console.log('User authenticated but no driver profile, showing KYC for document verification');
     return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="/*" element={<Index />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <KYCUpload 
+        onApproval={() => {
+          console.log('KYC approval completed, refreshing driver profile');
+          window.location.reload();
+        }} 
+      />
     );
   }
-
-  // Step 3: User is authenticated but either no driver profile OR not approved → Go to KYC
-  // This handles: no driver profile, pending status, or rejected status
-  console.log('User authenticated but needs KYC:', {
-    hasDriver: !!driver,
-    status: driver?.approved_status || 'no profile'
-  });
-  
-  return (
-    <KYCUpload 
-      onApproval={() => {
-        console.log('KYC approval completed, refreshing driver profile');
-        window.location.reload();
-      }} 
-    />
-  );
 };
 
 const App = () => (

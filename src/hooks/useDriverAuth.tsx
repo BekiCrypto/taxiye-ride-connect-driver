@@ -71,8 +71,18 @@ export const useDriverAuth = () => {
 
       if (session?.user) {
         setUser(session.user);
-        // Only fetch driver profile if we're not already fetching
-        if (!fetchingRef.current) {
+        
+        // Special handling for SIGNED_UP event - user just registered
+        if (event === 'SIGNED_UP') {
+          console.log('New user signed up, checking for driver profile creation...');
+          // Give the database trigger time to create the driver profile
+          setTimeout(async () => {
+            if (mountedRef.current && !fetchingRef.current) {
+              await handleFetchDriverProfile(session.user.id);
+            }
+          }, 2000); // Wait 2 seconds for trigger to complete
+        } else if (!fetchingRef.current) {
+          // For other events (SIGNED_IN, etc.), fetch immediately
           await handleFetchDriverProfile(session.user.id);
         }
       } else {
@@ -108,7 +118,7 @@ export const useDriverAuth = () => {
       );
       
       const driverData = await Promise.race([profilePromise, timeoutPromise]) as Driver | null;
-      console.log('Driver profile result:', driverData ? 'Found' : 'Not found');
+      console.log('Driver profile result:', driverData ? `Found - Status: ${driverData.approved_status}` : 'Not found');
       
       if (mountedRef.current) {
         setDriver(driverData);
