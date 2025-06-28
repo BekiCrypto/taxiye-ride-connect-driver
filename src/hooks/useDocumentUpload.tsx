@@ -12,12 +12,13 @@ export interface DocumentUpload {
 }
 
 export const useDocumentUpload = () => {
-  const { driver } = useDriverAuth();
+  const { user, driver } = useDriverAuth();
   const [uploads, setUploads] = useState<Record<string, DocumentUpload>>({});
   const [uploading, setUploading] = useState(false);
 
   const uploadDocument = async (type: string, file: File): Promise<string | null> => {
-    if (!driver) {
+    // Check for authenticated user instead of driver profile
+    if (!user) {
       toast({
         title: "Authentication Error",
         description: "Please sign in to upload documents",
@@ -26,11 +27,16 @@ export const useDocumentUpload = () => {
       return null;
     }
 
+    // If no driver profile exists yet, we'll use the user_id for the file path
+    const phoneRef = driver?.phone || `user_${user.id}`;
+
     console.log(`Starting upload for ${type}:`, {
       fileName: file.name,
       fileSize: file.size,
       fileType: file.type,
-      driverPhone: driver.phone
+      userAuthenticated: !!user,
+      driverExists: !!driver,
+      phoneRef
     });
 
     setUploading(true);
@@ -48,7 +54,7 @@ export const useDocumentUpload = () => {
       }
 
       const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const fileName = `${driver.user_id}/${type}_${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}/${type}_${Date.now()}.${fileExt}`;
       
       console.log(`Uploading to storage path: ${fileName}`);
 
@@ -81,10 +87,11 @@ export const useDocumentUpload = () => {
       }
 
       // Save document record to database with error handling
+      // Use phoneRef which could be driver phone or user_id based fallback
       const { data: dbData, error: dbError } = await supabase
         .from('documents')
         .upsert({
-          driver_phone_ref: driver.phone,
+          driver_phone_ref: phoneRef,
           type,
           file_url: publicUrl,
           status: 'pending',
