@@ -19,7 +19,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white pb-20">
       <Routes>
-        <Route path="/" element={<Dashboard onNavigate={(page) => window.location.hash = `#${page}`} />} />
+        <Route path="/" element={<Dashboard onNavigate={(page) => console.log('Navigate to:', page)} />} />
         <Route path="/wallet" element={<Wallet />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/support" element={<Support />} />
@@ -30,6 +30,7 @@ const Index = () => {
         <Route path="/active-trip" element={<ActiveTrip />} />
         <Route path="/trip-summary" element={<TripSummary />} />
         <Route path="/sos" element={<SOSEmergency />} />
+        <Route path="/kyc" element={<KYCUpload onApproval={() => window.location.reload()} />} />
       </Routes>
       <BottomNavigation />
     </div>

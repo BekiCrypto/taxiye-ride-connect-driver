@@ -32,72 +32,54 @@ const AppContent = () => {
     driverStatus: driver?.approved_status 
   });
 
-  // Show loading screen while checking authentication or splash screen
-  if ((loading || adminLoading) && showSplash) {
+  // Show splash screen only initially
+  if (showSplash && (loading || adminLoading)) {
     console.log('Showing splash screen - loading states:', { loading, adminLoading });
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
 
-  // Check for admin access first (if URL indicates admin)
-  if (window.location.pathname === '/admin' || window.location.search.includes('admin=true')) {
-    if (isAdmin) {
-      console.log('Admin logged in, showing dashboard');
-      return <AdminDashboard onLogout={adminLogout} />;
-    }
-    console.log('Admin login page requested');
-    return <AdminLogin onLogin={adminLogin} />;
-  }
-
-  // If admin is logged in but not on admin route, show admin dashboard
-  if (isAdmin) {
-    console.log('Admin logged in, showing dashboard');
-    return <AdminDashboard onLogout={adminLogout} />;
-  }
-
-  // Step 1: If no user is authenticated, show login/signup
-  if (!user) {
-    console.log('No authenticated user, showing login');
-    return <Login onLogin={() => window.location.reload()} />;
-  }
-
-  // Step 2: User is authenticated - check driver profile and approval status
-  if (driver) {
-    if (driver.approved_status === 'approved') {
-      // User is approved → Go to Home Dashboard
-      console.log('Driver is approved, showing main dashboard');
-      return (
-        <BrowserRouter>
-          <Routes>
-            <Route path="/*" element={<Index />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      );
-    } else {
-      // Driver exists but not approved (pending/rejected) → Go to KYC
-      console.log('Driver exists but not approved, showing KYC:', driver.approved_status);
-      return (
-        <KYCUpload 
-          onApproval={() => {
-            console.log('KYC approval completed, refreshing driver profile');
-            window.location.reload();
-          }} 
-        />
-      );
-    }
-  } else {
-    // Step 3: User is authenticated but no driver profile exists → Go to Document Verification (KYC)
-    console.log('User authenticated but no driver profile, showing KYC for document verification');
+  // If splash is done but still loading, show simple loading
+  if ((loading || adminLoading) && !showSplash) {
     return (
-      <KYCUpload 
-        onApproval={() => {
-          console.log('KYC approval completed, refreshing driver profile');
-          window.location.reload();
-        }} 
-      />
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-400 mx-auto mb-4"></div>
+          <div className="text-white">Loading...</div>
+        </div>
+      </div>
     );
   }
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/admin" element={
+          isAdmin ? <AdminDashboard onLogout={adminLogout} /> : <AdminLogin onLogin={adminLogin} />
+        } />
+        <Route path="*" element={
+          <>
+            {/* Check for admin access first */}
+            {window.location.search.includes('admin=true') ? (
+              isAdmin ? <AdminDashboard onLogout={adminLogout} /> : <AdminLogin onLogin={adminLogin} />
+            ) : isAdmin ? (
+              <AdminDashboard onLogout={adminLogout} />
+            ) : !user ? (
+              <Login onLogin={() => window.location.reload()} />
+            ) : driver ? (
+              driver.approved_status === 'approved' ? (
+                <Index />
+              ) : (
+                <KYCUpload onApproval={() => window.location.reload()} />
+              )
+            ) : (
+              <KYCUpload onApproval={() => window.location.reload()} />
+            )}
+          </>
+        } />
+      </Routes>
+    </BrowserRouter>
+  );
 };
 
 const App = () => (
