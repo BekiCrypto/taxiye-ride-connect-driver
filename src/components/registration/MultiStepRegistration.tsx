@@ -127,7 +127,7 @@ const MultiStepRegistration = ({ onComplete }: MultiStepRegistrationProps) => {
               Driver Registration
             </CardTitle>
             <p className="text-xs text-gray-400 text-center mt-1">
-              Electronic Taxi Dispatch System እታስ' Directive Compliant
+              Electronic Taxi Dispatch System ኤታስ' Directive Compliant
             </p>
             <div className="space-y-2">
               <div className="flex justify-between text-sm text-gray-400">
