@@ -14,6 +14,7 @@ import AdminLogin from "./components/AdminLogin";
 import AdminDashboard from "./components/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
+import UserTypeSelector from "./components/UserTypeSelector";
 import { useState } from "react";
 
 const queryClient = new QueryClient();
