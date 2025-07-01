@@ -17,7 +17,7 @@ import EarningsHistory from '../components/EarningsHistory';
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-900 text-white pb-20">
       <Routes>
         <Route path="/" element={<Dashboard onNavigate={(page) => window.location.hash = `#${page}`} />} />
         <Route path="/wallet" element={<Wallet />} />
