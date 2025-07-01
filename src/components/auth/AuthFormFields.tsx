@@ -3,31 +3,32 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 
 interface AuthFormFieldsProps {
-  mode: 'signin' | 'signup';
+  isLogin: boolean;
   phone: string;
   email: string;
   password: string;
   name: string;
-  onPhoneChange: (value: string) => void;
-  onEmailChange: (value: string) => void;
-  onPasswordChange: (value: string) => void;
-  onNameChange: (value: string) => void;
+  setPhone: (value: string) => void;
+  setEmail: (value: string) => void;
+  setPassword: (value: string) => void;
+  setName: (value: string) => void;
+  userType: string;
 }
 
 const AuthFormFields = ({
-  mode,
+  isLogin,
   phone,
   email,
   password,
   name,
-  onPhoneChange,
-  onEmailChange,
-  onPasswordChange,
-  onNameChange,
+  setPhone,
+  setEmail,
+  setPassword,
+  setName,
 }: AuthFormFieldsProps) => {
   return (
     <>
-      {mode === 'signup' && (
+      {!isLogin && (
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Full Name *
@@ -36,7 +37,7 @@ const AuthFormFields = ({
             type="text"
             placeholder="Enter your full name"
             value={name}
-            onChange={(e) => onNameChange(e.target.value)}
+            onChange={(e) => setName(e.target.value)}
             className="bg-gray-700 border-gray-600 text-white"
             required
           />
@@ -45,19 +46,19 @@ const AuthFormFields = ({
 
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">
-          {mode === 'signin' ? 'Phone Number or Email *' : 'Phone Number *'}
+          {isLogin ? 'Phone Number or Email *' : 'Phone Number *'}
         </label>
         <Input
-          type={mode === 'signin' ? 'text' : 'tel'}
-          placeholder={mode === 'signin' ? 'Enter your phone number or email' : 'Enter your phone number'}
+          type={isLogin ? 'text' : 'tel'}
+          placeholder={isLogin ? 'Enter your phone number or email' : 'Enter your phone number'}
           value={phone}
-          onChange={(e) => onPhoneChange(e.target.value)}
+          onChange={(e) => setPhone(e.target.value)}
           className="bg-gray-700 border-gray-600 text-white"
           required
         />
       </div>
 
-      {mode === 'signup' && (
+      {!isLogin && (
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Email Address
@@ -66,7 +67,7 @@ const AuthFormFields = ({
             type="email"
             placeholder="Enter your email address"
             value={email}
-            onChange={(e) => onEmailChange(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             className="bg-gray-700 border-gray-600 text-white"
           />
         </div>
@@ -80,7 +81,7 @@ const AuthFormFields = ({
           type="password"
           placeholder="Enter your password"
           value={password}
-          onChange={(e) => onPasswordChange(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           className="bg-gray-700 border-gray-600 text-white"
           required
         />

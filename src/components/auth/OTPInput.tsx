@@ -5,25 +5,27 @@ import { Button } from '@/components/ui/button';
 
 interface OTPInputProps {
   otp: string;
-  email: string;
+  setOtp: (value: string) => void;
+  phone: string;
   loading: boolean;
-  onOtpChange: (value: string) => void;
+  error: string;
+  success: string;
   onVerify: () => void;
-  onBack: () => void;
+  onResend: () => void;
 }
 
-const OTPInput = ({ otp, email, loading, onOtpChange, onVerify, onBack }: OTPInputProps) => {
+const OTPInput = ({ otp, setOtp, phone, loading, error, success, onVerify, onResend }: OTPInputProps) => {
   return (
     <>
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">
-          Enter verification code sent to your phone{email ? ' and email' : ''}
+          Enter verification code sent to your phone
         </label>
         <div className="flex justify-center">
           <InputOTP
             maxLength={4}
             value={otp}
-            onChange={(value) => onOtpChange(value)}
+            onChange={(value) => setOtp(value)}
           >
             <InputOTPGroup>
               <InputOTPSlot index={0} />
@@ -34,7 +36,7 @@ const OTPInput = ({ otp, email, loading, onOtpChange, onVerify, onBack }: OTPInp
           </InputOTP>
         </div>
         <p className="text-sm text-gray-400 mt-2 text-center">
-          Check your phone SMS{email ? ' and email' : ''} for the verification code
+          Check your phone SMS for the verification code
         </p>
       </div>
       <Button 
@@ -45,12 +47,12 @@ const OTPInput = ({ otp, email, loading, onOtpChange, onVerify, onBack }: OTPInp
         {loading ? 'Verifying...' : 'Verify & Continue'}
       </Button>
       <Button 
+        onClick={onResend}
         variant="ghost"
-        onClick={onBack}
         className="w-full text-gray-400"
         disabled={loading}
       >
-        Back to Login
+        Resend Code
       </Button>
     </>
   );

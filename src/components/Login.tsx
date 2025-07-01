@@ -2,13 +2,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Car, Phone, Mail, User, AlertCircle } from 'lucide-react';
+import { Car, User, AlertCircle } from 'lucide-react';
 import { useAuthHandlers } from './auth/useAuthHandlers';
-import AuthHeader from './auth/AuthHeader';
 import AuthFormFields from './auth/AuthFormFields';
 import AuthModeToggle from './auth/AuthModeToggle';
 import OTPInput from './auth/OTPInput';
@@ -47,7 +44,25 @@ const Login = ({ onLogin }: LoginProps) => {
   } = useAuthHandlers(onLogin);
 
   if (showForgotPassword) {
-    return <ForgotPasswordForm onBack={() => setShowForgotPassword(false)} />;
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+          <CardHeader className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+              <Car className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-2xl text-white">Reset Password</CardTitle>
+              <p className="text-sm text-gray-400 mt-1">Electronic Taxi Dispatch System (ETDS)</p>
+              <p className="text-xs text-gray-500">Directive Compliant</p>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <ForgotPasswordForm onBack={() => setShowForgotPassword(false)} />
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -69,7 +84,7 @@ const Login = ({ onLogin }: LoginProps) => {
             <>
               <AuthModeToggle isLogin={isLogin} setIsLogin={setIsLogin} />
               
-              <Tabs value={userType} onValueChange={setUserType} className="w-full">
+              <Tabs value={userType} onValueChange={(value) => setUserType(value as 'driver' | 'passenger')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-gray-700">
                   <TabsTrigger value="driver" className="flex items-center space-x-2">
                     <Car className="h-4 w-4" />
