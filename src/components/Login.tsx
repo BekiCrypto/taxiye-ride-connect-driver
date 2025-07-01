@@ -1,160 +1,159 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Car, Phone, Mail, User, AlertCircle } from 'lucide-react';
+import { useAuthHandlers } from './auth/useAuthHandlers';
 import AuthHeader from './auth/AuthHeader';
-import AuthModeToggle from './auth/AuthModeToggle';
 import AuthFormFields from './auth/AuthFormFields';
+import AuthModeToggle from './auth/AuthModeToggle';
 import OTPInput from './auth/OTPInput';
 import ForgotPasswordForm from './auth/ForgotPasswordForm';
-import { useAuthHandlers } from './auth/useAuthHandlers';
-import { handleUrlError } from './auth/utils/errorUtils';
 
-const Login = () => {
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [otp, setOtp] = useState('');
-  const [step, setStep] = useState<'auth' | 'otp' | 'forgot-password'>('auth');
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [resetEmail, setResetEmail] = useState('');
+interface LoginProps {
+  onLogin: () => void;
+}
 
+const Login = ({ onLogin }: LoginProps) => {
   const {
+    isLogin,
+    setIsLogin,
+    phone,
+    setPhone,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    name,
+    setName,
+    otp,
+    setOtp,
+    showOTP,
+    setShowOTP,
     loading,
-    handleSignIn,
-    handleSignUp,
-    handleSendOTP,
+    error,
+    success,
+    showForgotPassword,
+    setShowForgotPassword,
+    userType,
+    setUserType,
+    handleAuth,
     handleVerifyOTP,
-    handleForgotPassword,
-    setGeneratedOtp
-  } = useAuthHandlers();
+    handleResendOTP
+  } = useAuthHandlers(onLogin);
 
-  // Handle URL parameters for auth errors (like expired OTP)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const hasError = handleUrlError(params);
-    
-    if (hasError) {
-      // Clear the URL parameters after handling the error
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, []);
-
-  const onSignIn = async () => {
-    // For sign in, use phone field which now accepts both phone and email
-    const success = await handleSignIn(phone, password);
-    // Success handling is done in the auth hook via toast and auth state change
-  };
-
-  const onSignUp = async () => {
-    const success = await handleSignUp(phone, password, name, email);
-    // Success handling is done in the auth hook via toast and auth state change
-  };
-
-  const onSendOTP = async () => {
-    const success = await handleSendOTP(phone, email, mode);
-    if (success) {
-      setStep('otp');
-    }
-  };
-
-  const onVerifyOTP = async () => {
-    const success = await handleVerifyOTP(otp, phone, email, name, mode);
-    if (success) {
-      // Reset will happen automatically via auth state change
-      resetToAuth();
-    }
-  };
-
-  const onForgotPassword = async () => {
-    const success = await handleForgotPassword(resetEmail);
-    if (success) {
-      setStep('auth');
-      setResetEmail('');
-    }
-  };
-
-  const resetToAuth = () => {
-    setStep('auth');
-    setOtp('');
-    setGeneratedOtp('');
-    setResetEmail('');
-  };
+  if (showForgotPassword) {
+    return <ForgotPasswordForm onBack={() => setShowForgotPassword(false)} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-gray-800 border-gray-700">
-        <AuthHeader step={step} mode={mode} />
-        <CardContent className="space-y-4">
-          {step === 'auth' ? (
+        <CardHeader className="text-center space-y-4">
+          <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+            <Car className="h-8 w-8 text-white" />
+          </div>
+          <div>
+            <CardTitle className="text-2xl text-white">ETDS</CardTitle>
+            <p className="text-sm text-gray-400 mt-1">Electronic Taxi Dispatch System</p>
+            <p className="text-xs text-gray-500">Directive Compliant</p>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          {!showOTP ? (
             <>
-              <AuthModeToggle 
-                mode={mode} 
-                onModeChange={setMode} 
-                disabled={loading} 
-              />
+              <AuthModeToggle isLogin={isLogin} setIsLogin={setIsLogin} />
+              
+              <Tabs value={userType} onValueChange={setUserType} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-gray-700">
+                  <TabsTrigger value="driver" className="flex items-center space-x-2">
+                    <Car className="h-4 w-4" />
+                    <span>Driver</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="passenger" className="flex items-center space-x-2">
+                    <User className="h-4 w-4" />
+                    <span>Passenger</span>
+                  </TabsTrigger>
+                </TabsList>
 
-              <AuthFormFields
-                mode={mode}
-                phone={phone}
-                email={email}
-                password={password}
-                name={name}
-                onPhoneChange={setPhone}
-                onEmailChange={setEmail}
-                onPasswordChange={setPassword}
-                onNameChange={setName}
-              />
+                <TabsContent value="driver" className="space-y-4 mt-4">
+                  <AuthFormFields
+                    isLogin={isLogin}
+                    phone={phone}
+                    setPhone={setPhone}
+                    email={email}
+                    setEmail={setEmail}
+                    password={password}
+                    setPassword={setPassword}
+                    name={name}
+                    setName={setName}
+                    userType="driver"
+                  />
+                </TabsContent>
 
-              <Button 
-                onClick={mode === 'signin' ? onSignIn : onSignUp}
-                className="w-full bg-green-600 hover:bg-green-700"
-                disabled={loading}
-              >
-                {loading ? 'Please wait...' : (mode === 'signin' ? 'Sign In' : 'Create Driver Account')}
-              </Button>
+                <TabsContent value="passenger" className="space-y-4 mt-4">
+                  <AuthFormFields
+                    isLogin={isLogin}
+                    phone={phone}
+                    setPhone={setPhone}
+                    email={email}
+                    setEmail={setEmail}
+                    password={password}
+                    setPassword={setPassword}
+                    name={name}
+                    setName={setName}
+                    userType="passenger"
+                  />
+                </TabsContent>
+              </Tabs>
 
-              {mode === 'signin' && (
-                <div className="text-center">
-                  <Button 
-                    variant="ghost"
-                    onClick={() => setStep('forgot-password')}
-                    className="text-gray-400 hover:text-white text-sm p-0 h-auto"
-                    disabled={loading}
-                  >
-                    Forgot your password?
-                  </Button>
-                </div>
+              {error && (
+                <Alert className="bg-red-900/50 border-red-700/50">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-red-200">{error}</AlertDescription>
+                </Alert>
               )}
 
-              <div className="text-center">
-                <div className="text-gray-400 text-sm mb-2">Or verify with OTP</div>
-                <Button 
-                  variant="outline"
-                  onClick={onSendOTP}
-                  className="w-full border-gray-600 text-white hover:bg-gray-700"
-                  disabled={loading}
-                >
-                  {loading ? 'Sending...' : 'Send OTP to Phone & Email'}
-                </Button>
-              </div>
+              {success && (
+                <Alert className="bg-green-900/50 border-green-700/50">
+                  <AlertDescription className="text-green-200">{success}</AlertDescription>
+                </Alert>
+              )}
+
+              <Button
+                onClick={handleAuth}
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
+              </Button>
+
+              {isLogin && (
+                <div className="text-center">
+                  <button
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-blue-400 hover:text-blue-300 text-sm underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
             </>
-          ) : step === 'forgot-password' ? (
-            <ForgotPasswordForm
-              resetEmail={resetEmail}
-              loading={loading}
-              onEmailChange={setResetEmail}
-              onSubmit={onForgotPassword}
-              onBack={resetToAuth}
-            />
           ) : (
             <OTPInput
               otp={otp}
-              email={email}
+              setOtp={setOtp}
+              phone={phone}
               loading={loading}
-              onOtpChange={setOtp}
-              onVerify={onVerifyOTP}
-              onBack={resetToAuth}
+              error={error}
+              success={success}
+              onVerify={handleVerifyOTP}
+              onResend={handleResendOTP}
             />
           )}
         </CardContent>

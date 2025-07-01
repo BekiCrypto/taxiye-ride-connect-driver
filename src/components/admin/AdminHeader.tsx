@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { Monitor, Smartphone, LogOut } from 'lucide-react';
 
 interface AdminHeaderProps {
   previewMode: 'mobile' | 'desktop';
@@ -11,52 +11,47 @@ interface AdminHeaderProps {
 
 const AdminHeader = ({ previewMode, setPreviewMode, onLogout }: AdminHeaderProps) => {
   return (
-    <div className="bg-gray-800 border-b border-gray-700 p-4">
-      <div className="flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
-            <span className="text-sm font-bold">A</span>
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">Admin Review Panel</h1>
-            <p className="text-sm text-gray-400">Driver App Components</p>
-          </div>
+    <header className="bg-gray-800 border-b border-gray-700 p-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-white">Electronic Taxi Dispatch System (ETDS)</h1>
+          <p className="text-sm text-gray-400">Directive Compliant - Admin Dashboard</p>
         </div>
+
         <div className="flex items-center space-x-4">
-          <div className="flex bg-gray-700 rounded-lg p-1">
-            <button
+          <div className="flex items-center space-x-2 bg-gray-700 rounded-lg p-1">
+            <Button
+              variant={previewMode === 'mobile' ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => setPreviewMode('mobile')}
-              className={`px-3 py-1 rounded text-sm ${
-                previewMode === 'mobile' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'text-gray-300 hover:text-white'
-              }`}
+              className="flex items-center space-x-1"
             >
-              Mobile
-            </button>
-            <button
+              <Smartphone className="h-4 w-4" />
+              <span>Mobile</span>
+            </Button>
+            <Button
+              variant={previewMode === 'desktop' ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => setPreviewMode('desktop')}
-              className={`px-3 py-1 rounded text-sm ${
-                previewMode === 'desktop' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'text-gray-300 hover:text-white'
-              }`}
+              className="flex items-center space-x-1"
             >
-              Desktop
-            </button>
+              <Monitor className="h-4 w-4" />
+              <span>Desktop</span>
+            </Button>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
+
+          <Button
+            variant="outline"
+            size="sm"
             onClick={onLogout}
-            className="border-gray-600 text-gray-300 hover:bg-gray-700"
+            className="flex items-center space-x-2"
           >
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
+            <LogOut className="h-4 w-4" />
+            <span>Logout</span>
           </Button>
         </div>
       </div>
-    </div>
+    </header>
   );
 };
 

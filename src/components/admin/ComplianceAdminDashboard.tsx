@@ -39,7 +39,10 @@ const ComplianceAdminDashboard = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-white">Compliance Admin Dashboard</h1>
+          <div>
+            <h1 className="text-3xl font-bold text-white">ETDS Compliance Dashboard</h1>
+            <p className="text-gray-400">Electronic Taxi Dispatch System - Directive Compliant</p>
+          </div>
           <Button onClick={() => exportToCSV(filteredDrivers)} className="flex items-center space-x-2">
             <Download className="h-4 w-4" />
             <span>Export Data</span>
