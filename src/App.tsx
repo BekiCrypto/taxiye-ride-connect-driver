@@ -14,12 +14,14 @@ import AdminLogin from "./components/AdminLogin";
 import AdminDashboard from "./components/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
+import { useState } from "react";
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   const { user, driver, loading } = useDriverAuth();
   const { isAdmin, loading: adminLoading, login: adminLogin, logout: adminLogout } = useAdminAuth();
+  const [showSplash, setShowSplash] = useState(true);
 
   console.log('App render state:', { 
     user: !!user, 
@@ -30,10 +32,10 @@ const AppContent = () => {
     driverStatus: driver?.approved_status 
   });
 
-  // Show loading screen while checking authentication
-  if (loading || adminLoading) {
+  // Show loading screen while checking authentication or splash screen
+  if ((loading || adminLoading) && showSplash) {
     console.log('Showing splash screen - loading states:', { loading, adminLoading });
-    return <SplashScreen />;
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
 
   // Check for admin access first (if URL indicates admin)
@@ -55,7 +57,7 @@ const AppContent = () => {
   // Step 1: If no user is authenticated, show login/signup
   if (!user) {
     console.log('No authenticated user, showing login');
-    return <Login />;
+    return <Login onLogin={() => window.location.reload()} />;
   }
 
   // Step 2: User is authenticated - check driver profile and approval status

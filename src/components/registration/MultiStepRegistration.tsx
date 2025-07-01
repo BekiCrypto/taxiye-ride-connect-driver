@@ -125,7 +125,7 @@ const MultiStepRegistration = ({ onComplete }: MultiStepRegistrationProps) => {
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
             <CardTitle className="text-white text-center">
-              Driver Registration - EtASN Compliant
+              Electronic Taxi Dispatch System (ETDS) Driver Registration - Directive Compliant
             </CardTitle>
             <div className="space-y-2">
               <div className="flex justify-between text-sm text-gray-400">

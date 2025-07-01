@@ -10,7 +10,7 @@ interface AuthHeaderProps {
 const AuthHeader = ({ step, mode }: AuthHeaderProps) => {
   const getTitle = () => {
     if (step === 'forgot-password') return 'Reset Password';
-    return mode === 'signin' ? 'Welcome Back' : 'Join Taxiye as a Driver';
+    return mode === 'signin' ? 'Welcome Back' : 'Join ETDS as a Driver';
   };
 
   const getDescription = () => {
@@ -25,7 +25,7 @@ const AuthHeader = ({ step, mode }: AuthHeaderProps) => {
       <div className="mx-auto mb-4">
         <img 
           src="https://cmsprod.taxiye.com/uploads/taxiye_logo_main_09d8b73c2f.svg" 
-          alt="Taxiye Logo" 
+          alt="ETDS Logo" 
           className="h-16 w-auto mx-auto"
         />
       </div>
