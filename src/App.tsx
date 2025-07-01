@@ -22,6 +22,7 @@ const AppContent = () => {
   const { user, driver, loading } = useDriverAuth();
   const { isAdmin, loading: adminLoading, login: adminLogin, logout: adminLogout } = useAdminAuth();
   const [showSplash, setShowSplash] = useState(true);
+  const [userType, setUserType] = useState<'driver' | 'passenger' | 'admin' | null>(null);
 
   console.log('App render state:', { 
     user: !!user, 
@@ -29,7 +30,8 @@ const AppContent = () => {
     loading, 
     adminLoading,
     isAdmin,
-    driverStatus: driver?.approved_status 
+    driverStatus: driver?.approved_status,
+    userType
   });
 
   // Show splash screen only initially
@@ -65,10 +67,14 @@ const AppContent = () => {
             ) : isAdmin ? (
               <AdminDashboard onLogout={adminLogout} />
             ) : !user ? (
-              <Login onLogin={() => window.location.reload()} />
+              // Show user type selector for new users, then login
+              userType ? (
+                <Login onLogin={() => window.location.reload()} />
+              ) : (
+                <UserTypeSelector onSelectType={setUserType} />
+              )
             ) : (
-              // Allow access to all components even without driver profile
-              // This ensures navigation works and users can access all features
+              // User is logged in - determine their interface based on their profile or selection
               <Index />
             )}
           </>
