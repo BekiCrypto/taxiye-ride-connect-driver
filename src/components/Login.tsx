@@ -48,13 +48,17 @@ const Login = ({ onLogin }: LoginProps) => {
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-gray-800 border-gray-700">
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
-              <Car className="h-8 w-8 text-white" />
+            <div className="mx-auto">
+              <img 
+                src="https://cmsprod.taxiye.com/uploads/taxiye_logo_main_09d8b73c2f.svg" 
+                alt="Taxiye Logo" 
+                className="h-16 w-auto mx-auto"
+              />
             </div>
             <div>
               <CardTitle className="text-2xl text-white">Reset Password</CardTitle>
-              <p className="text-sm text-gray-400 mt-1">Electronic Taxi Dispatch System (ETDS)</p>
-              <p className="text-xs text-gray-500">Directive Compliant</p>
+              <p className="text-sm text-gray-400 mt-1">Taxiye - Electronic Taxi Dispatch System</p>
+              <p className="text-xs text-gray-500">ኤታስ' Directive Compliant</p>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -69,13 +73,17 @@ const Login = ({ onLogin }: LoginProps) => {
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-gray-800 border-gray-700">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
-            <Car className="h-8 w-8 text-white" />
+          <div className="mx-auto">
+            <img 
+              src="https://cmsprod.taxiye.com/uploads/taxiye_logo_main_09d8b73c2f.svg" 
+              alt="Taxiye Logo" 
+              className="h-16 w-auto mx-auto"
+            />
           </div>
           <div>
-            <CardTitle className="text-2xl text-white">ETDS</CardTitle>
+            <CardTitle className="text-2xl text-white">Taxiye</CardTitle>
             <p className="text-sm text-gray-400 mt-1">Electronic Taxi Dispatch System</p>
-            <p className="text-xs text-gray-500">Directive Compliant</p>
+            <p className="text-xs text-gray-500">ኤታስ' Directive Compliant</p>
           </div>
         </CardHeader>
 
@@ -143,7 +151,7 @@ const Login = ({ onLogin }: LoginProps) => {
               <Button
                 onClick={handleAuth}
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-green-600 hover:bg-green-700"
               >
                 {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
               </Button>
@@ -152,7 +160,7 @@ const Login = ({ onLogin }: LoginProps) => {
                 <div className="text-center">
                   <button
                     onClick={() => setShowForgotPassword(true)}
-                    className="text-blue-400 hover:text-blue-300 text-sm underline"
+                    className="text-green-400 hover:text-green-300 text-sm underline"
                   >
                     Forgot Password?
                   </button>

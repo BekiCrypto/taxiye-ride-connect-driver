@@ -123,11 +123,18 @@ const MultiStepRegistration = ({ onComplete }: MultiStepRegistrationProps) => {
       <div className="max-w-4xl mx-auto">
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
+            <div className="text-center mb-4">
+              <img 
+                src="https://cmsprod.taxiye.com/uploads/taxiye_logo_main_09d8b73c2f.svg" 
+                alt="Taxiye Logo" 
+                className="h-12 w-auto mx-auto mb-2"
+              />
+            </div>
             <CardTitle className="text-white text-center">
               Driver Registration
             </CardTitle>
             <p className="text-xs text-gray-400 text-center mt-1">
-              Electronic Taxi Dispatch System ኤታስ' Directive Compliant
+              Taxiye - Electronic Taxi Dispatch System ኤታስ' Directive Compliant
             </p>
             <div className="space-y-2">
               <div className="flex justify-between text-sm text-gray-400">
@@ -166,7 +173,7 @@ const MultiStepRegistration = ({ onComplete }: MultiStepRegistrationProps) => {
                     key={step.id}
                     className={`w-3 h-3 rounded-full ${
                       step.id === currentStep
-                        ? 'bg-blue-500'
+                        ? 'bg-green-500'
                         : step.id < currentStep
                         ? 'bg-green-500'
                         : 'bg-gray-600'
@@ -178,7 +185,7 @@ const MultiStepRegistration = ({ onComplete }: MultiStepRegistrationProps) => {
               <Button
                 onClick={currentStep === steps.length ? handleFinalSubmit : handleNext}
                 disabled={isLoading}
-                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
               >
                 <span>{currentStep === steps.length ? 'Submit Application' : 'Next'}</span>
                 {currentStep < steps.length && <ChevronRight className="h-4 w-4" />}
