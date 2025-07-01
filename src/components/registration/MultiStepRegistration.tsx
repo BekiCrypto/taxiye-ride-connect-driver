@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -125,8 +124,11 @@ const MultiStepRegistration = ({ onComplete }: MultiStepRegistrationProps) => {
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
             <CardTitle className="text-white text-center">
-              Electronic Taxi Dispatch System (ETDS) Driver Registration - Directive Compliant
+              Driver Registration
             </CardTitle>
+            <p className="text-xs text-gray-400 text-center mt-1">
+              Electronic Taxi Dispatch System እታስ' Directive Compliant
+            </p>
             <div className="space-y-2">
               <div className="flex justify-between text-sm text-gray-400">
                 <span>Step {currentStep} of {steps.length}</span>
