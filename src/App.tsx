@@ -66,14 +66,10 @@ const AppContent = () => {
               <AdminDashboard onLogout={adminLogout} />
             ) : !user ? (
               <Login onLogin={() => window.location.reload()} />
-            ) : driver ? (
-              driver.approved_status === 'approved' ? (
-                <Index />
-              ) : (
-                <KYCUpload onApproval={() => window.location.reload()} />
-              )
             ) : (
-              <KYCUpload onApproval={() => window.location.reload()} />
+              // Allow access to all components even without driver profile
+              // This ensures navigation works and users can access all features
+              <Index />
             )}
           </>
         } />
