@@ -32,15 +32,29 @@ export const useDocumentExpiry = () => {
         return;
       }
 
-      setNotifications(data || []);
+      // Map the data to match our TypeScript types
+      const mappedNotifications: DocumentExpiryNotification[] = (data || []).map(notification => ({
+        id: notification.id,
+        driver_phone_ref: notification.driver_phone_ref,
+        document_type: notification.document_type as 'license' | 'insurance' | 'roadworthiness',
+        expiry_date: notification.expiry_date,
+        notification_sent_30_days: notification.notification_sent_30_days,
+        notification_sent_7_days: notification.notification_sent_7_days,
+        notification_sent_on_expiry: notification.notification_sent_on_expiry,
+        last_notification_sent: notification.last_notification_sent,
+        created_at: notification.created_at,
+        updated_at: notification.updated_at
+      }));
+
+      setNotifications(mappedNotifications);
 
       // Check for urgent notifications (expiring within 7 days)
-      const urgentNotifications = data?.filter(notification => {
+      const urgentNotifications = mappedNotifications.filter(notification => {
         const expiryDate = new Date(notification.expiry_date);
         const today = new Date();
         const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         return daysUntilExpiry <= 7 && daysUntilExpiry >= 0;
-      }) || [];
+      });
 
       // Show toast notifications for urgent expiries
       urgentNotifications.forEach(notification => {

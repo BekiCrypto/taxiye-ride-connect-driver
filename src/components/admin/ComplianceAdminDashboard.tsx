@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,7 +49,42 @@ const ComplianceAdminDashboard = () => {
       return;
     }
 
-    setDrivers(data || []);
+    // Map the data to match our TypeScript types
+    const mappedDrivers: Driver[] = (data || []).map(driver => ({
+      phone: driver.phone,
+      user_id: driver.user_id,
+      name: driver.name,
+      email: driver.email,
+      gender: driver.gender,
+      date_of_birth: driver.date_of_birth,
+      profile_photo_url: driver.profile_photo_url,
+      national_id_number: driver.national_id_number,
+      license_number: driver.license_number,
+      license_expiry_date: driver.license_expiry_date,
+      vehicle_make: driver.vehicle_make,
+      vehicle_model: driver.vehicle_model,
+      vehicle_year: driver.vehicle_year,
+      vehicle_color: driver.vehicle_color,
+      plate_number: driver.plate_number,
+      insurance_expiry_date: driver.insurance_expiry_date,
+      roadworthiness_expiry_date: driver.roadworthiness_expiry_date,
+      service_agreement_signed: driver.service_agreement_signed,
+      service_agreement_date: driver.service_agreement_date,
+      digital_signature_url: driver.digital_signature_url,
+      registration_step: driver.registration_step,
+      is_registration_complete: driver.is_registration_complete,
+      approved_status: driver.approved_status as 'pending' | 'approved' | 'rejected',
+      wallet_balance: driver.wallet_balance,
+      is_online: driver.is_online,
+      created_at: driver.created_at,
+      updated_at: driver.updated_at,
+      rejection_reason: driver.rejection_reason,
+      admin_notes: driver.admin_notes,
+      last_reviewed_at: driver.last_reviewed_at,
+      reviewed_by: driver.reviewed_by
+    }));
+
+    setDrivers(mappedDrivers);
   };
 
   const fetchExpiryNotifications = async () => {
@@ -68,7 +102,21 @@ const ComplianceAdminDashboard = () => {
       return;
     }
 
-    setExpiryNotifications(data || []);
+    // Map the data to match our TypeScript types
+    const mappedNotifications: DocumentExpiryNotification[] = (data || []).map(notification => ({
+      id: notification.id,
+      driver_phone_ref: notification.driver_phone_ref,
+      document_type: notification.document_type as 'license' | 'insurance' | 'roadworthiness',
+      expiry_date: notification.expiry_date,
+      notification_sent_30_days: notification.notification_sent_30_days,
+      notification_sent_7_days: notification.notification_sent_7_days,
+      notification_sent_on_expiry: notification.notification_sent_on_expiry,
+      last_notification_sent: notification.last_notification_sent,
+      created_at: notification.created_at,
+      updated_at: notification.updated_at
+    }));
+
+    setExpiryNotifications(mappedNotifications);
   };
 
   const fetchAuditLogs = async () => {
@@ -83,7 +131,17 @@ const ComplianceAdminDashboard = () => {
       return;
     }
 
-    setAuditLogs(data || []);
+    // Map the data to match our TypeScript types
+    const mappedLogs: ComplianceAuditLog[] = (data || []).map(log => ({
+      id: log.id,
+      driver_phone_ref: log.driver_phone_ref,
+      action_type: log.action_type as 'registration' | 'document_upload' | 'expiry_notification' | 'approval' | 'rejection',
+      action_details: log.action_details as Record<string, any>,
+      performed_by: log.performed_by,
+      created_at: log.created_at
+    }));
+
+    setAuditLogs(mappedLogs);
   };
 
   const filteredDrivers = drivers.filter(driver => {

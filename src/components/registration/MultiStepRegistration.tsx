@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useDriverAuth } from '@/hooks/useDriverAuth';
 import { toast } from '@/hooks/use-toast';
+import { Driver } from '@/types/driver';
 import PersonalInfoStep from './steps/PersonalInfoStep';
 import LicenseInfoStep from './steps/LicenseInfoStep';
 import VehicleInfoStep from './steps/VehicleInfoStep';
@@ -14,6 +15,13 @@ import ReviewSubmitStep from './steps/ReviewSubmitStep';
 
 interface MultiStepRegistrationProps {
   onComplete: () => void;
+}
+
+interface StepComponent {
+  data: Partial<Driver>;
+  onChange: (stepData: Partial<Driver>) => void;
+  onNext: () => void;
+  isLoading: boolean;
 }
 
 const steps = [
