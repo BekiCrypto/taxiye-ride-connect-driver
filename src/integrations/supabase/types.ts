@@ -254,6 +254,88 @@ export type Database = {
           },
         ]
       }
+      compliance_audit_logs: {
+        Row: {
+          action_details: Json | null
+          action_type: string
+          created_at: string | null
+          driver_phone_ref: string | null
+          id: string
+          performed_by: string | null
+        }
+        Insert: {
+          action_details?: Json | null
+          action_type: string
+          created_at?: string | null
+          driver_phone_ref?: string | null
+          id?: string
+          performed_by?: string | null
+        }
+        Update: {
+          action_details?: Json | null
+          action_type?: string
+          created_at?: string | null
+          driver_phone_ref?: string | null
+          id?: string
+          performed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_audit_logs_driver_phone_ref_fkey"
+            columns: ["driver_phone_ref"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["phone"]
+          },
+        ]
+      }
+      document_expiry_notifications: {
+        Row: {
+          created_at: string | null
+          document_type: string
+          driver_phone_ref: string | null
+          expiry_date: string
+          id: string
+          last_notification_sent: string | null
+          notification_sent_30_days: boolean | null
+          notification_sent_7_days: boolean | null
+          notification_sent_on_expiry: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_type: string
+          driver_phone_ref?: string | null
+          expiry_date: string
+          id?: string
+          last_notification_sent?: string | null
+          notification_sent_30_days?: boolean | null
+          notification_sent_7_days?: boolean | null
+          notification_sent_on_expiry?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          document_type?: string
+          driver_phone_ref?: string | null
+          expiry_date?: string
+          id?: string
+          last_notification_sent?: string | null
+          notification_sent_30_days?: boolean | null
+          notification_sent_7_days?: boolean | null
+          notification_sent_on_expiry?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_expiry_notifications_driver_phone_ref_fkey"
+            columns: ["driver_phone_ref"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["phone"]
+          },
+        ]
+      }
       documents: {
         Row: {
           admin_notes: string | null
@@ -306,57 +388,99 @@ export type Database = {
           admin_notes: string | null
           approved_status: string | null
           created_at: string | null
+          date_of_birth: string | null
+          digital_signature_url: string | null
           email: string | null
+          gender: string | null
+          insurance_expiry_date: string | null
           is_online: boolean | null
+          is_registration_complete: boolean | null
           last_reviewed_at: string | null
+          license_expiry_date: string | null
           license_number: string | null
           name: string
+          national_id_number: string | null
           phone: string
           plate_number: string | null
+          profile_photo_url: string | null
+          registration_step: number | null
           rejection_reason: string | null
           reviewed_by: string | null
+          roadworthiness_expiry_date: string | null
+          service_agreement_date: string | null
+          service_agreement_signed: boolean | null
           updated_at: string | null
           user_id: string | null
           vehicle_color: string | null
+          vehicle_make: string | null
           vehicle_model: string | null
+          vehicle_year: number | null
           wallet_balance: number | null
         }
         Insert: {
           admin_notes?: string | null
           approved_status?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
+          digital_signature_url?: string | null
           email?: string | null
+          gender?: string | null
+          insurance_expiry_date?: string | null
           is_online?: boolean | null
+          is_registration_complete?: boolean | null
           last_reviewed_at?: string | null
+          license_expiry_date?: string | null
           license_number?: string | null
           name: string
+          national_id_number?: string | null
           phone: string
           plate_number?: string | null
+          profile_photo_url?: string | null
+          registration_step?: number | null
           rejection_reason?: string | null
           reviewed_by?: string | null
+          roadworthiness_expiry_date?: string | null
+          service_agreement_date?: string | null
+          service_agreement_signed?: boolean | null
           updated_at?: string | null
           user_id?: string | null
           vehicle_color?: string | null
+          vehicle_make?: string | null
           vehicle_model?: string | null
+          vehicle_year?: number | null
           wallet_balance?: number | null
         }
         Update: {
           admin_notes?: string | null
           approved_status?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
+          digital_signature_url?: string | null
           email?: string | null
+          gender?: string | null
+          insurance_expiry_date?: string | null
           is_online?: boolean | null
+          is_registration_complete?: boolean | null
           last_reviewed_at?: string | null
+          license_expiry_date?: string | null
           license_number?: string | null
           name?: string
+          national_id_number?: string | null
           phone?: string
           plate_number?: string | null
+          profile_photo_url?: string | null
+          registration_step?: number | null
           rejection_reason?: string | null
           reviewed_by?: string | null
+          roadworthiness_expiry_date?: string | null
+          service_agreement_date?: string | null
+          service_agreement_signed?: boolean | null
           updated_at?: string | null
           user_id?: string | null
           vehicle_color?: string | null
+          vehicle_make?: string | null
           vehicle_model?: string | null
+          vehicle_year?: number | null
           wallet_balance?: number | null
         }
         Relationships: []
@@ -625,6 +749,47 @@ export type Database = {
           },
         ]
       }
+      service_agreements: {
+        Row: {
+          agreement_document_url: string | null
+          agreement_version: string
+          created_at: string | null
+          digital_signature_url: string | null
+          driver_phone_ref: string | null
+          id: string
+          is_active: boolean | null
+          signed_date: string | null
+        }
+        Insert: {
+          agreement_document_url?: string | null
+          agreement_version?: string
+          created_at?: string | null
+          digital_signature_url?: string | null
+          driver_phone_ref?: string | null
+          id?: string
+          is_active?: boolean | null
+          signed_date?: string | null
+        }
+        Update: {
+          agreement_document_url?: string | null
+          agreement_version?: string
+          created_at?: string | null
+          digital_signature_url?: string | null
+          driver_phone_ref?: string | null
+          id?: string
+          is_active?: boolean | null
+          signed_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_agreements_driver_phone_ref_fkey"
+            columns: ["driver_phone_ref"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["phone"]
+          },
+        ]
+      }
       sos_alerts: {
         Row: {
           created_at: string | null
@@ -850,6 +1015,10 @@ export type Database = {
       auto_assign_ticket: {
         Args: { ticket_id_param: string }
         Returns: string
+      }
+      check_expiring_documents: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
